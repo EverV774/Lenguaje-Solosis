@@ -10,9 +10,11 @@
         <maven.compiler.release>23</maven.compiler.release>
         <exec.mainClass>com.mycompany.solosis.Solosis</exec.mainClass>
     </properties>
-    <dependency>
-        <groupId>de.jflex</groupId>
-        <artifactId>jflex</artifactId>
-        <version>1.9.1</version>
-    </dependency>
+    <dependencies>
+        <dependency>
+            <groupId>de.jflex</groupId>
+            <artifactId>jflex</artifactId>
+            <version>1.9.1</version>
+        </dependency>
+    </dependencies>
 </project>
