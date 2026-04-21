@@ -1,0 +1,40 @@
+
+import java_cup.runtime.*;
+import java.util.*;
+
+parser code {:
+    public static void main(String[] args) throws Exception {
+        Lexer lexer = new Lexer(System.in);
+        parser p = new parser(lexer);
+        p.parse();
+    }
+:};
+
+/* TERMINALES */
+terminal GABITE, FALINK, ESPEON;
+terminal SUMA, RESTA, MULT, DIV;
+terminal ASIGNACION;
+terminal Integer ENTERO;
+terminal String ID, STRING;
+
+/* NO TERMINALES */
+non terminal Object programa;
+non terminal Object expresion;
+
+/* PRECEDENCIA */
+precedence left SUMA, RESTA;
+precedence left MULT, DIV;
+
+/* GRAMÁTICA */
+programa ::= expresion {: System.out.println("Resultado correcto"); :};
+
+expresion ::=
+      ENTERO:e1 SUMA ENTERO:e2
+        {: System.out.println(e1 + " + " + e2 + " = " + (e1 + e2)); :}
+    | ENTERO:e1 RESTA ENTERO:e2
+        {: System.out.println(e1 + " - " + e2 + " = " + (e1 - e2)); :}
+    | ENTERO:e1 MULT ENTERO:e2
+        {: System.out.println(e1 + " * " + e2 + " = " + (e1 * e2)); :}
+    | ENTERO:e1 DIV ENTERO:e2
+        {: System.out.println(e1 + " / " + e2 + " = " + (e1 / e2)); :}
+;
