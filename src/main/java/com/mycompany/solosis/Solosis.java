@@ -9,7 +9,7 @@ package com.mycompany.solosis;
  * @author Heber
  */
 public class Solosis {
-
+    
     public static void main(String[] args) {
 
         Operacion a = new gabite(13);
