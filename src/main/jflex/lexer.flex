@@ -1,5 +1,6 @@
 %%
 
+%cup
 %class SolosisLexer
 %unicode
 %line
@@ -11,6 +12,10 @@
 // Puedes agregar código Java aquí si lo necesitas
 
 %}
+
+import java_cup.runtime.Sysbol;
+
+private Sysbol
 
 /* ====== DEFINICIONES ====== */
 
