@@ -1,7 +1,7 @@
 %%
 
 %cup
-%class SolosisLexer
+%class Lexer
 %unicode
 %line
 %column
