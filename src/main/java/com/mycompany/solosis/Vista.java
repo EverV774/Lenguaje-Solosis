@@ -4,6 +4,12 @@
  */
 package com.mycompany.solosis;
 
+// Estas son las correctas para TU proyecto
+
+
+
+
+
 /**
  *
  * @author Heber
@@ -107,21 +113,69 @@ public class Vista extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnTokensActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTokensActionPerformed
-        // TODO add your handling code here:
-        VentanaTokens vt = new VentanaTokens(this, true); 
+        // 1. Crear la lista para guardar los tokens encontrados
+    java.util.ArrayList<Object[]> listaTokens = new java.util.ArrayList<>();
+    String codigo = txtEntrada.getText(); // Lo que el usuario escribió
+    
+    try {
+        // 2. Configurar el Lexer con el texto de la entrada
+        java.io.StringReader reader = new java.io.StringReader(codigo);
+        Lexer lexer = new Lexer(reader); 
+        java_cup.runtime.Symbol token;
 
-        // 2. Preparamos unos datos de ejemplo (esto vendría de tu analizador)
-        java.util.ArrayList<Object[]> lista = new java.util.ArrayList<>();
-        lista.add(new Object[]{"TIPO_INT", "Zentai", 1, 1});
-        lista.add(new Object[]{"ID", "edad$", 1, 8});
-        lista.add(new Object[]{"NUMERO", "23", 1, 15});
+        // 3. Recorrer todos los tokens
+        while (true) {
+            token = lexer.next_token();
+            if (token.sym == sym.EOF) break; // Terminar al llegar al final del archivo
 
-        // 3. Le pasamos los datos a la ventana y la mostramos
-        vt.llenarTabla(lista);
-        vt.setLocationRelativeTo(null); // Para que salga centrada
+            // Extraemos los datos: Tipo (nombre), Valor (lexema), Línea y Columna
+            String tipo = obtenerNombreToken(token.sym);
+            String valor = (token.value != null) ? token.value.toString() : "";
+            int linea = token.left + 1;
+            int columna = token.right + 1;
+
+            // Agregamos la fila a nuestra lista
+            listaTokens.add(new Object[]{tipo, valor, linea, columna});
+        }
+
+        // 4. Mostrar la ventana con la tabla
+        VentanaTokens vt = new VentanaTokens(this, true);
+        vt.llenarTabla(listaTokens);
+        vt.setLocationRelativeTo(null);
         vt.setVisible(true);
+
+    } catch (Exception e) {
+        txtSalida.setText("Error en el análisis léxico: " + e.getMessage());
+    }
     }//GEN-LAST:event_btnTokensActionPerformed
 
+    
+    
+    private String obtenerNombreToken(int id) {
+    switch (id) {
+        // Palabras reservadas (Los tipos de dato)
+        case sym.GABITE: return "TIPO_INT (GABITE)"; 
+        case sym.ESPEON: return "TIPO_DECIMAL (ESPEON)";
+        case sym.FALINK: return "TIPO_STRING (FALINK)";
+
+        // Valores
+        case sym.ENTERO: return "VALOR_ENTERO (GABITE)"; // El 10, 20, etc.
+        case sym.STRING: return "VALOR_CADENA (FALINK)"; // Lo que va en comillas
+
+        // Operadores y otros
+        case sym.ASIGNACION: return "ASIGNACION (=)";
+        case sym.SUMA: return "OPERADOR_SUMA (+)";
+        case sym.RESTA: return "OPERADOR_RESTA (-)";
+        case sym.MULT: return "OPERADOR_MULT (*)";
+        case sym.DIV: return "OPERADOR_DIV (/)";
+        case sym.ID: return "IDENTIFICADOR (NOMBRE)";
+        case sym.EOF: return "FIN_DE_ARCHIVO";
+        
+        default: return "TOKEN_OTRO (" + id + ")";
+    }
+}
+    
+    
     /**
      * @param args the command line arguments
      */
