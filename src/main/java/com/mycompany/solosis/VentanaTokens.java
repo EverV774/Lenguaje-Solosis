@@ -18,6 +18,7 @@ public class VentanaTokens extends javax.swing.JDialog {
     public VentanaTokens(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        this.setTitle("Análisis Léxico - Tokens Solosis");
     }
 
     // Método para llenar la tabla desde afuera
