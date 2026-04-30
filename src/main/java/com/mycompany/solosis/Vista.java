@@ -5,12 +5,6 @@
 package com.mycompany.solosis;
 
 import java.util.List;
-import com.mycompany.solosis.AnaluzadorManual;
-
-
-
-
-
 /**
  *
  * @author Heber
@@ -80,6 +74,11 @@ public class Vista extends javax.swing.JFrame {
         );
 
         btnAnalizar.setText("Analizar");
+        btnAnalizar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAnalizarActionPerformed(evt);
+            }
+        });
         panelBotones.add(btnAnalizar);
 
         btnTokens.setText("Ver Tokens");
@@ -115,69 +114,43 @@ public class Vista extends javax.swing.JFrame {
 
     private void btnTokensActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTokensActionPerformed
         // 1. Crear la lista para guardar los tokens encontrados
-    java.util.ArrayList<Object[]> listaTokens = new java.util.ArrayList<>();
-    String codigo = txtEntrada.getText(); // Lo que el usuario escribió
-    
-    try {
-        // 2. Configurar el Lexer con el texto de la entrada
-        java.io.StringReader reader = new java.io.StringReader(codigo);
-        Lexer lexer = new Lexer(reader); 
-        java_cup.runtime.Symbol token;
+        java.util.ArrayList<Object[]> listaTokens = new java.util.ArrayList<>();
+        String codigo = txtEntrada.getText(); // Lo que el usuario escribió
 
-        // 3. Recorrer todos los tokens
-        while (true) {
-            token = lexer.next_token();
-            if (token.sym == sym.EOF) break; // Terminar al llegar al final del archivo
+        try {
+            // 2. Configurar el Lexer con el texto de la entrada
+            java.io.StringReader reader = new java.io.StringReader(codigo);
+            Lexer lexer = new Lexer(reader); 
+            java_cup.runtime.Symbol token;
 
-            // Extraemos los datos: Tipo (nombre), Valor (lexema), Línea y Columna
-            String tipo = obtenerNombreToken(token.sym);
-            String valor = (token.value != null) ? token.value.toString() : "";
-            int linea = token.left + 1;
-            int columna = token.right + 1;
+            // 3. Recorrer todos los tokens
+            while (true) {
+                token = lexer.next_token();
+                if (token.sym == sym.EOF) break; // Terminar al llegar al final del archivo
 
-            // Agregamos la fila a nuestra lista
-            listaTokens.add(new Object[]{tipo, valor, linea, columna});
+                // Extraemos los datos: Tipo (nombre), Valor (lexema), Línea y Columna
+                String tipo = obtenerNombreToken(token.sym);
+                String valor = (token.value != null) ? token.value.toString() : "";
+                int linea = token.left + 1;
+                int columna = token.right + 1;
+
+                // Agregamos la fila a nuestra lista
+                listaTokens.add(new Object[]{tipo, valor, linea, columna});
+            }
+
+            // 4. Mostrar la ventana con la tabla
+            VentanaTokens vt = new VentanaTokens(this, true);
+            vt.llenarTabla(listaTokens);
+            vt.setLocationRelativeTo(null);
+            vt.setVisible(true);
+
+        } catch (Exception e) {
+            txtSalida.setText("Error en el análisis léxico: " + e.getMessage());
         }
-
-        // 4. Mostrar la ventana con la tabla
-        VentanaTokens vt = new VentanaTokens(this, true);
-        vt.llenarTabla(listaTokens);
-        vt.setLocationRelativeTo(null);
-        vt.setVisible(true);
-
-    } catch (Exception e) {
-        txtSalida.setText("Error en el análisis léxico: " + e.getMessage());
-    }
     }//GEN-LAST:event_btnTokensActionPerformed
 
-    
-    
-    private String obtenerNombreToken(int id) {
-        switch (id) {
-            // Palabras reservadas (Los tipos de dato)
-            case sym.GABITE: return "TIPO_INT (GABITE)"; 
-            case sym.ESPEON: return "TIPO_DECIMAL (ESPEON)";
-            case sym.FALINK: return "TIPO_STRING (FALINK)";
-
-            // Valores
-            case sym.ENTERO: return "VALOR_ENTERO (GABITE)"; // El 10, 20, etc.
-            case sym.STRING: return "VALOR_CADENA (FALINK)"; // Lo que va en comillas
-
-            // Operadores y otros
-            case sym.ASIGNACION: return "ASIGNACION (=)";
-            case sym.SUMA: return "OPERADOR_SUMA (+)";
-            case sym.RESTA: return "OPERADOR_RESTA (-)";
-            case sym.MULT: return "OPERADOR_MULT (*)";
-            case sym.DIV: return "OPERADOR_DIV (/)";
-            case sym.ID: return "IDENTIFICADOR (NOMBRE)";
-            case sym.EOF: return "FIN_DE_ARCHIVO";
-
-            default: return "TOKEN_OTRO (" + id + ")";
-        }
-
-    }
-    
-    private void btnAnalizarActionPerformed(java.awt.event.ActionEvent evt) {                                           
+    private void btnAnalizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAnalizarActionPerformed
+        // TODO add your handling code here:
         String codigo = txtEntrada.getText();
         txtSalida.setText("Iniciando análisis...\n");
 
@@ -208,6 +181,31 @@ public class Vista extends javax.swing.JFrame {
             // Esto atrapará errores de Steelix o del Intérprete
             txtSalida.append("\nERROR CRÍTICO: " + e.getMessage());
         }
+    }//GEN-LAST:event_btnAnalizarActionPerformed
+    
+    private String obtenerNombreToken(int id) {
+        switch (id) {
+            // Palabras reservadas (Los tipos de dato)
+            case sym.GABITE: return "TIPO_INT (GABITE)"; 
+            case sym.ESPEON: return "TIPO_DECIMAL (ESPEON)";
+            case sym.FALINK: return "TIPO_STRING (FALINK)";
+
+            // Valores
+            case sym.ENTERO: return "VALOR_ENTERO (GABITE)"; // El 10, 20, etc.
+            case sym.STRING: return "VALOR_CADENA (FALINK)"; // Lo que va en comillas
+
+            // Operadores y otros
+            case sym.ASIGNACION: return "ASIGNACION (=)";
+            case sym.SUMA: return "OPERADOR_SUMA (+)";
+            case sym.RESTA: return "OPERADOR_RESTA (-)";
+            case sym.MULT: return "OPERADOR_MULT (*)";
+            case sym.DIV: return "OPERADOR_DIV (/)";
+            case sym.ID: return "IDENTIFICADOR (NOMBRE)";
+            case sym.EOF: return "FIN_DE_ARCHIVO";
+
+            default: return "TOKEN_OTRO (" + id + ")";
+        }
+
     }
     
     /**

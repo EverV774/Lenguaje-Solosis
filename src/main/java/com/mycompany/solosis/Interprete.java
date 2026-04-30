@@ -4,87 +4,42 @@
  */
 package com.mycompany.solosis;
 
-    import com.mycompany.solosis.AnalizadorLexico.TipoToken;
-    import com.mycompany.solosis.AnalizadorLexico.Token;
-    import java.util.HashMap;
-    import java.util.List;
-    /**
-     *
-     * @author Heber
-     */
-    public class Interprete {
-        private HashMap<String, Object> tablaSimbolos = new HashMap<>();
-        private StringBuilder logEjecucion = new StringBuilder();
+import com.mycompany.solosis.AnalizadorManual.TipoToken;
+import com.mycompany.solosis.AnalizadorManual.Token;
+import java.util.HashMap;
+import java.util.List;
 
-        public void ejecutar(List<Token> tokens) {
-            logEjecucion.setLength(0); 
-            logEjecucion.append(">>> INICIANDO INTERPRETACIÓN <<<\n");
+/**
+ * @author Heber
+ */
+public class Interprete {
+    private HashMap<String, Object> tablaSimbolos = new HashMap<>();
+    private StringBuilder logEjecucion = new StringBuilder();
 
-            for (int i = 0; i < tokens.size(); i++) {
-                Token tokenActual = tokens.get(i);
+    public void ejecutar(List<Token> tokens) {
+        logEjecucion.setLength(0);
+        logEjecucion.append(">>> INICIANDO INTERPRETACIÓN <<<\n\n");
 
-                // 1. Lógica para GABITE
-                if (tokenActual.tipo == TipoToken.GABITE) {
-                    try {
-                        String nombreVar = tokens.get(i + 1).valor;
-                        int valor = Integer.parseInt(tokens.get(i + 3).valor);
+        for (int i = 0; i < tokens.size(); i++) {
+            Token t = tokens.get(i);
 
-                        gabite nuevaVar = new gabite(valor); 
-                        tablaSimbolos.put(nombreVar, nuevaVar); // Ahora ya existe tablaSimbolos
+            // Si es una palabra reservada (ahora en minúsculas)
+            if (t.tipo == TipoToken.GABITE || t.tipo == TipoToken.ESPEON || t.tipo == TipoToken.FALINK) {
+                logEjecucion.append("Palabra reservada: ").append(t.valor).append("\n");
 
-                        logEjecucion.append("[OK] Variable GABITE '").append(nombreVar)
-                                    .append("' creada con valor: ").append(valor).append("\n");
-
-                        i += 4; 
-                    } catch (Exception e) {
-                        logEjecucion.append("[ERROR] Fallo en declaración GABITE\n");
-                    }
-                }
-
-                // 2. Lógica para ESPEON
-                else if (tokenActual.tipo == TipoToken.ESPEON) {
-                    try {
-                        String nombreVar = tokens.get(i + 1).valor;
-                        double valor = Double.parseDouble(tokens.get(i + 3).valor);
-
-                        Espeon nuevaVar = new Espeon(valor);
-                        tablaSimbolos.put(nombreVar, nuevaVar);
-
-                        logEjecucion.append("[OK] Variable ESPEON '").append(nombreVar)
-                                    .append("' creada con valor: ").append(valor).append("\n");
-
-                        i += 4;
-                    } catch (Exception e) {
-                        logEjecucion.append("[ERROR] Fallo en declaración ESPEON\n");
-                    }
-                }
-
-                // 3. Lógica para FALINK
-                else if (tokenActual.tipo == TipoToken.FALINK) {
-                    try {
-                        String nombreVar = tokens.get(i + 1).valor;
-                        String valor = tokens.get(i + 3).valor;
-
-                        Falink nuevaVar = new Falink(valor);
-                        tablaSimbolos.put(nombreVar, nuevaVar);
-
-                        logEjecucion.append("[OK] Variable FALINK '").append(nombreVar)
-                                    .append("' creada con valor: ").append(valor).append("\n");
-
-                        i += 4;
-                    } catch (Exception e) {
-                        logEjecucion.append("[ERROR] Fallo en declaración FALINK\n");
-                    }
+                // En lugar de i+1, i+2... vamos a buscar los tokens reales
+                if (i + 4 < tokens.size()) {
+                    logEjecucion.append("Identificador: ").append(tokens.get(i + 1).valor).append("\n");
+                    logEjecucion.append("Operador asignación: ").append(tokens.get(i + 2).valor).append("\n");
+                    logEjecucion.append("Constante/Valor: ").append(tokens.get(i + 3).valor).append("\n");
+                    logEjecucion.append("Signo de cierre: ").append(tokens.get(i + 4).valor).append("\n");
+                    logEjecucion.append("-----------------------------------\n");
+                    i += 4;
                 }
             }
-
-            if (tablaSimbolos.isEmpty()) {
-                logEjecucion.append("No se detectaron declaraciones válidas.\n");
-            }
-            logEjecucion.append(">>> FIN DE LA EJECUCIÓN <<<");
         }
-
-        public String obtenerLogEjecucion() {
-            return logEjecucion.toString();
-        }
+        logEjecucion.append("\n>>> FIN DE LA EJECUCIÓN <<<");
     }
+
+    public String obtenerLogEjecucion() { return logEjecucion.toString(); }
+}
