@@ -5,6 +5,7 @@
 package com.mycompany.solosis;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.util.List;
 /**
  *
@@ -18,6 +19,15 @@ public class Vista extends javax.swing.JFrame {
     public Vista() {
         initComponents();
         this.setLocationRelativeTo(null);
+        // Colores tipo VS Code para el editor
+        txtEntrada.setBackground(new Color(30, 30, 30));
+        txtEntrada.setForeground(Color.WHITE);
+        txtEntrada.setCaretColor(Color.WHITE); // El cursor que parpadea
+        txtEntrada.setFont(new Font("Consolas", Font.PLAIN, 14));
+
+        // Colores para la consola de salida
+        txtSalida.setBackground(new Color(20, 20, 20));
+        txtSalida.setForeground(Color.CYAN);
     }
 
     /**
@@ -150,7 +160,7 @@ public class Vista extends javax.swing.JFrame {
         txtSalida.setText("");
 
         try {
-            txtSalida.setForeground(Color.BLACK);
+            txtSalida.setForeground(Color.GREEN);
             AnalizadorManual lexer = new AnalizadorManual();
             List<AnalizadorManual.Token> listaTokens = lexer.escanear(codigo);
             

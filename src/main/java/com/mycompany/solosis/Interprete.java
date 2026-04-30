@@ -32,6 +32,9 @@ public class Interprete {
                 logEjecucion.append("Identificador: ").append(nombreVar).append("\n");
                 
                 logEjecucion.append("Operador asignación: ").append(tokens.get(i + 2).valor).append("\n");
+                if (tablaSimbolos.containsKey(nombreVar)) {
+                    throw new Exception("Error Semántico: La variable '" + nombreVar + "' ya ha sido declarada. Línea " + (i + 1));
+                }
                 
                 List<AnalizadorManual.Token> tokensExpresion = new ArrayList<>();
                 int j = i + 3;
