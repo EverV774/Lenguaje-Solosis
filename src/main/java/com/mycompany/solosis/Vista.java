@@ -4,6 +4,7 @@
  */
 package com.mycompany.solosis;
 
+import java.awt.Color;
 import java.util.List;
 /**
  *
@@ -146,11 +147,11 @@ public class Vista extends javax.swing.JFrame {
     private void btnAnalizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAnalizarActionPerformed
         // TODO add your handling code here:
         String codigo = txtEntrada.getText();
-        txtSalida.setText("Iniciando análisis...\n");
+        txtSalida.setText("");
 
         try {
+            txtSalida.setForeground(Color.BLACK);
             AnalizadorManual lexer = new AnalizadorManual();
-            
             List<AnalizadorManual.Token> listaTokens = lexer.escanear(codigo);
             
             Steelix validador = new Steelix();
@@ -164,11 +165,28 @@ public class Vista extends javax.swing.JFrame {
             Interprete ejecutor = new Interprete();
             ejecutor.ejecutar(listaTokens);
 
-            txtSalida.append("Resultados:\n" + ejecutor.obtenerLogEjecucion());
-            txtSalida.append("\n[PROCESO TERMINADO CON ÉXITO]");
+            txtSalida.append(ejecutor.obtenerLogEjecucion());
+            txtSalida.append("\n[SOLOSIS COMPILADO CON ÉXITO]");
 
         } catch (Exception e) {
-            txtSalida.append("\nERROR CRÍTICO: " + e.getMessage());
+            txtSalida.setForeground(Color.RED);
+            txtSalida.setText("ERROR DETECTADO: " + e.getMessage());
+            
+            String msg = e.getMessage();
+            if (msg.contains("Línea")) {
+                try {
+                    int numLinea = Integer.parseInt(msg.replaceAll(".*Línea\\s+(\\d+).*", "$1"));
+                    
+                    int inicio = txtEntrada.getLineStartOffset(numLinea - 1);
+                    int fin = txtEntrada.getLineEndOffset(numLinea - 1);
+                    
+                    txtEntrada.requestFocus();
+                    txtEntrada.setCaretPosition(inicio);
+                    txtEntrada.select(inicio, fin);
+
+                } catch (Exception ex) {
+                }
+            }
         }
     }//GEN-LAST:event_btnAnalizarActionPerformed
     

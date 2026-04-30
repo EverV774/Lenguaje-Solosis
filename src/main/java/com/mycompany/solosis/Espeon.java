@@ -9,46 +9,40 @@ package com.mycompany.solosis;
  * @author Heber
  */
 public class Espeon extends Operacion {
-    
     private double valor;
-     
-    public Espeon (double valor){
-        this.valor=valor;
+
+    public Espeon(double valor) {
+        this.valor = valor;
     }
-     
-    public double getvalor(){
-        return valor;
+
+    @Override
+    public Object getValor() {
+        return this.valor;
     }
-    
+
     @Override
     public Operacion suma(Operacion otro) {
-        Espeon o = (Espeon) otro;
-        return new Espeon(this.valor + o.valor);
+        return new Espeon(this.valor + ((Number) otro.getValor()).doubleValue());
     }
 
     @Override
     public Operacion resta(Operacion otro) {
-        Espeon o = (Espeon) otro;
-        return new Espeon(this.valor - o.valor);
+        return new Espeon(this.valor - ((Number) otro.getValor()).doubleValue());
     }
 
     @Override
     public Operacion multiplicacion(Operacion otro) {
-        Espeon o = (Espeon) otro;
-        return new Espeon(this.valor * o.valor);
+        double valorOtro = ((Number) otro.getValor()).doubleValue();
+        return new Espeon(this.valor * valorOtro);
     }
 
     @Override
     public Operacion division(Operacion otro) {
-        Espeon o = (Espeon) otro;
-        if (o.valor == 0) {
-            throw new ArithmeticException("División entre cero");
-        }
-        return new Espeon(this.valor / o.valor);
+        double divisor = ((Number) otro.getValor()).doubleValue();
+        if (divisor == 0) throw new ArithmeticException("División por cero");
+        return new Espeon(this.valor / divisor);
     }
 
     @Override
-    public String toString() {
-        return String.valueOf(valor);
-    }
+    public String toString() { return String.valueOf(valor); }
 }

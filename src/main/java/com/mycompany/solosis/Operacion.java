@@ -19,4 +19,6 @@ public abstract class Operacion {
     public abstract Operacion multiplicacion(Operacion otro);
 
     public abstract Operacion division(Operacion otro);
+    
+    public abstract Object getValor();
 }

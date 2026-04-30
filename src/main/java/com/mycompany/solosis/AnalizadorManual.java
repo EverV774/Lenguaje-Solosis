@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
  */
 public class AnalizadorManual {
     public enum TipoToken {
-        GABITE, ESPEON, FALINK, IDENTIFICADOR, NUMERO, ASIGNACION, PUNTO_COMA, OPERADOR, DESCONOCIDO
+        GABITE, ESPEON, FALINK, LOUDRED, // <--- Nueva
+        IDENTIFICADOR, NUMERO, ASIGNACION, PUNTO_COMA, OPERADOR, DESCONOCIDO
     }
 
     public static class Token {
@@ -25,29 +26,42 @@ public class AnalizadorManual {
     }
 
     public List<Token> escanear(String codigo) {
-        List<Token> tokens = new ArrayList<>();
-        String patronG = "\\b(gabite|espeon|falink)\\b";
-        String patronID = "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b";
-        String patronNum = "\\b(\\d+(\\.\\d+)?)\\b";
-        String patronString = "(\"[^\"]*\")";
-        String patronOps = "(\\+|-|\\*|/|\\?|;)";
+    List<Token> tokens = new ArrayList<>();
+    String[] lineas = codigo.split("\n");
+    
+    String patronG = "\\b(gabite|espeon|falink|loudred)\\b";
+    String patronID = "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b";
+    String patronNum = "\\b(\\d+(\\.\\d+)?)\\b";
+    String patronString = "(\"[^\"]*\")";
+    String patronOps = "(\\+|-|\\*|/|\\?|;)";
 
-        Pattern p = Pattern.compile(patronG + "|" + patronID + "|" + patronNum + "|" + patronString + "|" + patronOps);
-        Matcher m = p.matcher(codigo);
+    Pattern p = Pattern.compile(patronG + "|" + patronID + "|" + patronNum + "|" + patronString + "|" + patronOps);
 
+    for (String l : lineas) {
+        String lineaLimpia = l;
+        
+        if (lineaLimpia.contains("#")) {
+            lineaLimpia = lineaLimpia.substring(0, lineaLimpia.indexOf("#"));
+        }
+        
+        Matcher m = p.matcher(lineaLimpia); 
+        
         while (m.find()) {
             String lexema = m.group();
-            
+
             if (lexema.equals("gabite")) tokens.add(new Token(TipoToken.GABITE, lexema));
             else if (lexema.equals("espeon")) tokens.add(new Token(TipoToken.ESPEON, lexema));
             else if (lexema.equals("falink")) tokens.add(new Token(TipoToken.FALINK, lexema));
-            else if (lexema.startsWith("\"")) tokens.add(new Token(TipoToken.NUMERO, lexema));
+            else if (lexema.equals("loudred")) tokens.add(new Token(TipoToken.LOUDRED, lexema));
+            else if (lexema.startsWith("\"")) tokens.add(new Token(TipoToken.IDENTIFICADOR, lexema)); 
             else if (lexema.matches("[\\+\\-\\*/]")) tokens.add(new Token(TipoToken.OPERADOR, lexema));
             else if (lexema.equals("?")) tokens.add(new Token(TipoToken.ASIGNACION, lexema));
             else if (lexema.equals(";")) tokens.add(new Token(TipoToken.PUNTO_COMA, lexema));
             else if (lexema.matches("\\d+(\\.\\d+)?")) tokens.add(new Token(TipoToken.NUMERO, lexema));
             else tokens.add(new Token(TipoToken.IDENTIFICADOR, lexema));
         }
-        return tokens;
     }
+    
+    return tokens;
+}
 }

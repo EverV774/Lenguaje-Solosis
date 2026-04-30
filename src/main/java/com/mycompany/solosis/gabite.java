@@ -11,46 +11,38 @@ package com.mycompany.solosis;
  */
 
 public class gabite extends Operacion {
-
     private int valor;
 
     public gabite(int valor) {
         this.valor = valor;
     }
 
-    public int getValor() {
-        return valor;
+    @Override
+    public Object getValor() {
+        return this.valor;
     }
 
     @Override
     public Operacion suma(Operacion otro) {
-        gabite o = (gabite) otro;
-        return new gabite(this.valor + o.valor);
+        return new gabite(this.valor + (int) otro.getValor());
     }
 
     @Override
     public Operacion resta(Operacion otro) {
-        gabite o = (gabite) otro;
-        return new gabite(this.valor - o.valor);
+        return new gabite(this.valor - (int) otro.getValor());
     }
 
     @Override
     public Operacion multiplicacion(Operacion otro) {
-        gabite o = (gabite) otro;
-        return new gabite(this.valor * o.valor);
+        return new gabite(this.valor * (int) otro.getValor());
     }
 
     @Override
     public Operacion division(Operacion otro) {
-        gabite o = (gabite) otro;
-        if (o.valor == 0) {
-            throw new ArithmeticException("División entre cero");
-        }
-        return new gabite(this.valor / o.valor);
+        if ((int) otro.getValor() == 0) throw new ArithmeticException("División por cero");
+        return new gabite(this.valor / (int) otro.getValor());
     }
 
     @Override
-    public String toString() {
-        return String.valueOf(valor);
-    }
+    public String toString() { return String.valueOf(valor); }
 }

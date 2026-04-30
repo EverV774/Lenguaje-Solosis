@@ -8,20 +8,38 @@ package com.mycompany.solosis;
  *
  * @author Heber
  */
-public class Falink {
+public class Falink extends Operacion {
+    private String valor;
 
-    private final String valor;
-
-    public Falink(String valor){
+    public Falink(String valor) {
         this.valor = valor;
     }
 
-    public Falink concatenar(Falink otrov){
-        return new Falink(this.valor + otrov.valor);
+    @Override
+    public Object getValor() {
+        return this.valor;
     }
 
     @Override
-    public String toString(){
-        return valor;
+    public Operacion suma(Operacion otro) {
+        return new Falink(this.valor + otro.getValor().toString());
     }
+    
+    @Override
+    public Operacion resta(Operacion otro) {
+        throw new UnsupportedOperationException("No se puede restar en un Falink");
+    }
+
+    @Override
+    public Operacion multiplicacion(Operacion otro) {
+        throw new UnsupportedOperationException("No se puede multiplicar en un Falink");
+    }
+
+    @Override
+    public Operacion division(Operacion otro) {
+        throw new UnsupportedOperationException("No se puede dividir en un Falink");
+    }
+
+    @Override
+    public String toString() { return valor; }
 }
