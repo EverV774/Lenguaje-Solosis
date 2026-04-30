@@ -49,6 +49,7 @@ public class Steelix {
             String valor = expresionCompleta.toString();
 
             if (tipo.equals("falink")) {
+                // Ahora permite letras, números, comillas, espacios y el signo +
                 if (!valor.startsWith("\"") && !valor.matches("[a-zA-Z0-9\\+\\s\"]+")) {
                     return "Excepción: falink requiere comillas, variables o una expresión válida. Línea " + numLinea;
                 }
