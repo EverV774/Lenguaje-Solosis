@@ -26,7 +26,6 @@ public class AnalizadorManual {
 
     public List<Token> escanear(String codigo) {
         List<Token> tokens = new ArrayList<>();
-        // En AnalizadorManual.java actualiza tus patrones:
         String patronG = "\\b(gabite|espeon|falink)\\b";
         String patronID = "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b";
         String patronNum = "\\b(\\d+(\\.\\d+)?)\\b";
@@ -38,8 +37,7 @@ public class AnalizadorManual {
 
         while (m.find()) {
             String lexema = m.group();
-
-            // Aquí está el truco: pasamos el lexema a Mayúsculas solo para el Enum
+            
             if (lexema.equals("gabite")) tokens.add(new Token(TipoToken.GABITE, lexema));
             else if (lexema.equals("espeon")) tokens.add(new Token(TipoToken.ESPEON, lexema));
             else if (lexema.equals("falink")) tokens.add(new Token(TipoToken.FALINK, lexema));

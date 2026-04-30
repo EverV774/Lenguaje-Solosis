@@ -113,32 +113,26 @@ public class Vista extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnTokensActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTokensActionPerformed
-        // 1. Crear la lista para guardar los tokens encontrados
         java.util.ArrayList<Object[]> listaTokens = new java.util.ArrayList<>();
-        String codigo = txtEntrada.getText(); // Lo que el usuario escribió
+        String codigo = txtEntrada.getText();
 
         try {
-            // 2. Configurar el Lexer con el texto de la entrada
             java.io.StringReader reader = new java.io.StringReader(codigo);
             Lexer lexer = new Lexer(reader); 
             java_cup.runtime.Symbol token;
-
-            // 3. Recorrer todos los tokens
+            
             while (true) {
                 token = lexer.next_token();
-                if (token.sym == sym.EOF) break; // Terminar al llegar al final del archivo
-
-                // Extraemos los datos: Tipo (nombre), Valor (lexema), Línea y Columna
+                if (token.sym == sym.EOF) break;
+                
                 String tipo = obtenerNombreToken(token.sym);
                 String valor = (token.value != null) ? token.value.toString() : "";
                 int linea = token.left + 1;
                 int columna = token.right + 1;
-
-                // Agregamos la fila a nuestra lista
+                
                 listaTokens.add(new Object[]{tipo, valor, linea, columna});
             }
-
-            // 4. Mostrar la ventana con la tabla
+            
             VentanaTokens vt = new VentanaTokens(this, true);
             vt.llenarTabla(listaTokens);
             vt.setLocationRelativeTo(null);
@@ -155,13 +149,10 @@ public class Vista extends javax.swing.JFrame {
         txtSalida.setText("Iniciando análisis...\n");
 
         try {
-            // 1. Fase Léxica - Usamos la clase manual
             AnalizadorManual lexer = new AnalizadorManual();
-
-            // Es vital que el tipo de la lista sea AnalizadorManual.Token
+            
             List<AnalizadorManual.Token> listaTokens = lexer.escanear(codigo);
-
-            // 2. Fase de Validación (Steelix)
+            
             Steelix validador = new Steelix();
             String[] lineas = codigo.split("\n");
             for (int i = 0; i < lineas.length; i++) {
@@ -169,8 +160,7 @@ public class Vista extends javax.swing.JFrame {
                     validador.validarLinea(lineas[i], i + 1);
                 }
             }
-
-            // 3. Fase de Interpretación
+            
             Interprete ejecutor = new Interprete();
             ejecutor.ejecutar(listaTokens);
 
@@ -178,21 +168,19 @@ public class Vista extends javax.swing.JFrame {
             txtSalida.append("\n[PROCESO TERMINADO CON ÉXITO]");
 
         } catch (Exception e) {
-            // Esto atrapará errores de Steelix o del Intérprete
             txtSalida.append("\nERROR CRÍTICO: " + e.getMessage());
         }
     }//GEN-LAST:event_btnAnalizarActionPerformed
     
     private String obtenerNombreToken(int id) {
         switch (id) {
-            // Palabras reservadas (Los tipos de dato)
             case sym.GABITE: return "TIPO_INT (GABITE)"; 
             case sym.ESPEON: return "TIPO_DECIMAL (ESPEON)";
             case sym.FALINK: return "TIPO_STRING (FALINK)";
 
             // Valores
-            case sym.ENTERO: return "VALOR_ENTERO (GABITE)"; // El 10, 20, etc.
-            case sym.STRING: return "VALOR_CADENA (FALINK)"; // Lo que va en comillas
+            case sym.ENTERO: return "VALOR_ENTERO (GABITE)";
+            case sym.STRING: return "VALOR_CADENA (FALINK)";
 
             // Operadores y otros
             case sym.ASIGNACION: return "ASIGNACION (=)";

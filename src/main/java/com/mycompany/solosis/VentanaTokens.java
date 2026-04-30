@@ -4,8 +4,6 @@
  */
 package com.mycompany.solosis;
 
-import javax.swing.table.DefaultTableModel;
-
 /**
  *
  * @author Heber
@@ -20,8 +18,7 @@ public class VentanaTokens extends javax.swing.JDialog {
         initComponents();
         this.setTitle("Análisis Léxico - Tokens Solosis");
     }
-
-    // Método para llenar la tabla desde afuera
+    
     public void llenarTabla(java.util.List<Object[]> datos) {
         javax.swing.table.DefaultTableModel modelo = (javax.swing.table.DefaultTableModel) tblTokens.getModel();
         modelo.setRowCount(0); // Limpiar
@@ -100,7 +97,7 @@ public class VentanaTokens extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-this.dispose();        // TODO add your handling code here:
+        this.dispose();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**

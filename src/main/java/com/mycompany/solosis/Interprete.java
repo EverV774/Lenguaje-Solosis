@@ -22,12 +22,10 @@ public class Interprete {
 
         for (int i = 0; i < tokens.size(); i++) {
             Token t = tokens.get(i);
-
-            // Si es una palabra reservada (ahora en minúsculas)
+            
             if (t.tipo == TipoToken.GABITE || t.tipo == TipoToken.ESPEON || t.tipo == TipoToken.FALINK) {
                 logEjecucion.append("Palabra reservada: ").append(t.valor).append("\n");
-
-                // En lugar de i+1, i+2... vamos a buscar los tokens reales
+                
                 if (i + 4 < tokens.size()) {
                     logEjecucion.append("Identificador: ").append(tokens.get(i + 1).valor).append("\n");
                     logEjecucion.append("Operador asignación: ").append(tokens.get(i + 2).valor).append("\n");
