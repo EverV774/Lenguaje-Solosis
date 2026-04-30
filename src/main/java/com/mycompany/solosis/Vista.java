@@ -6,6 +6,7 @@ package com.mycompany.solosis;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.util.ArrayList;
 import java.util.List;
 /**
  *
@@ -158,44 +159,41 @@ public class Vista extends javax.swing.JFrame {
         // TODO add your handling code here:
         String codigo = txtEntrada.getText();
         txtSalida.setText("");
+        txtSalida.setForeground(Color.BLACK);
 
-        try {
-            txtSalida.setForeground(Color.GREEN);
-            AnalizadorManual lexer = new AnalizadorManual();
-            List<AnalizadorManual.Token> listaTokens = lexer.escanear(codigo);
-            
-            Steelix validador = new Steelix();
-            String[] lineas = codigo.split("\n");
-            for (int i = 0; i < lineas.length; i++) {
-                if(!lineas[i].trim().isEmpty()) {
-                    validador.validarLinea(lineas[i], i + 1);
-                }
+        List<String> erroresEncontrados = new ArrayList<>();
+        String[] lineas = codigo.split("\n");
+        Steelix validador = new Steelix();
+
+        for (int i = 0; i < lineas.length; i++) {
+            String error = validador.validarLinea(lineas[i], i + 1);
+            if (error != null) {
+                erroresEncontrados.add(error);
             }
-            
-            Interprete ejecutor = new Interprete();
-            ejecutor.ejecutar(listaTokens);
-
-            txtSalida.append(ejecutor.obtenerLogEjecucion());
-            txtSalida.append("\n[SOLOSIS COMPILADO CON ÉXITO]");
-
-        } catch (Exception e) {
+        }
+        
+        if (!erroresEncontrados.isEmpty()) {
             txtSalida.setForeground(Color.RED);
-            txtSalida.setText("ERROR DETECTADO: " + e.getMessage());
-            
-            String msg = e.getMessage();
-            if (msg.contains("Línea")) {
-                try {
-                    int numLinea = Integer.parseInt(msg.replaceAll(".*Línea\\s+(\\d+).*", "$1"));
-                    
-                    int inicio = txtEntrada.getLineStartOffset(numLinea - 1);
-                    int fin = txtEntrada.getLineEndOffset(numLinea - 1);
-                    
-                    txtEntrada.requestFocus();
-                    txtEntrada.setCaretPosition(inicio);
-                    txtEntrada.select(inicio, fin);
+            txtSalida.append("--- SE ENCONTRARON ERRORES ---\n");
+            for (String err : erroresEncontrados) {
+                txtSalida.append(err + "\n");
+            }
+            txtSalida.append("\n[ANÁLISIS TERMINADO CON " + erroresEncontrados.size() + " ERRORES]");
+        } else {
+            try {
+                AnalizadorManual lexer = new AnalizadorManual();
+                List<AnalizadorManual.Token> tokens = lexer.escanear(codigo);
 
-                } catch (Exception ex) {
-                }
+                Interprete ejecutor = new Interprete();
+                ejecutor.ejecutar(tokens);
+
+                txtSalida.setForeground(new Color(0, 150, 0)); // Verde éxito
+                txtSalida.append(ejecutor.obtenerLogEjecucion());
+                txtSalida.append("\n>>> [SOLOSIS COMPILADO CON ÉXITO]");
+            } catch (Exception e) {
+                // Errores que solo salen al ejecutar (como variables duplicadas)
+                txtSalida.setForeground(Color.RED);
+                txtSalida.setText("ERROR DE EJECUCIÓN: " + e.getMessage());
             }
         }
     }//GEN-LAST:event_btnAnalizarActionPerformed

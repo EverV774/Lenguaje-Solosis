@@ -22,8 +22,37 @@ public class VentanaTokens extends javax.swing.JDialog {
     public void llenarTabla(java.util.List<Object[]> datos) {
         javax.swing.table.DefaultTableModel modelo = (javax.swing.table.DefaultTableModel) tblTokens.getModel();
         modelo.setRowCount(0); // Limpiar
+
+        // Lista de palabras reservadas de tu lenguaje (puedes ajustarla)
+        java.util.Set<String> reservadas = new java.util.HashSet<>();
+        reservadas.add("gabite");
+        reservadas.add("falink");
+        reservadas.add("si");
+        reservadas.add("sino");
+        reservadas.add("mientras");
+        reservadas.add("para");
+        reservadas.add("retornar");
+
         for (Object[] fila : datos) {
-            modelo.addRow(fila);
+            String tipo = fila[0].toString();
+            String valor = fila[1] != null ? fila[1].toString() : "";
+            Object linea = fila[2];
+            Object columna = fila[3];
+
+            // Determinar si es palabra reservada
+            String esReservada = reservadas.contains(valor.toLowerCase()) ? "Sí" : "No";
+
+            // Construir nueva fila con columnas extra
+            Object[] nuevaFila = {
+                linea,        // No. Línea (al inicio)
+                tipo,
+                valor,
+                linea,
+                columna,
+                esReservada   // Nueva columna
+            };
+
+            modelo.addRow(nuevaFila);
         }
     }
     /**
@@ -43,17 +72,17 @@ public class VentanaTokens extends javax.swing.JDialog {
 
         tblTokens.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
             },
             new String [] {
-                "Tipo", "Valor", "Linea", "Colunma"
+                "No. Lista", "Tipo", "Valor", "Linea", "Colunma", "Palabra reservada"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false
+                false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {

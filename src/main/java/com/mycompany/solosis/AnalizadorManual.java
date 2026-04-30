@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class AnalizadorManual {
     public enum TipoToken {
         GABITE, ESPEON, FALINK, MEOWL,
-        IDENTIFICADOR, NUMERO, ASIGNACION, PUNTO_COMA, OPERADOR, DESCONOCIDO
+        IDENTIFICADOR, NUMERO, ASIGNACION, PUNTO_COMA, OPERADOR, COMENTARIO, DESCONOCIDO
     }
 
     public static class Token {
