@@ -49,8 +49,8 @@ public class Steelix {
             String valor = expresionCompleta.toString();
 
             if (tipo.equals("falink")) {
-                if (!valor.startsWith("\"") && !valor.matches("[a-zA-Z]+")) {
-                    return "Excepción: falink requiere comillas o una variable válida. Línea " + numLinea;
+                if (!valor.startsWith("\"") && !valor.matches("[a-zA-Z0-9\\+\\s\"]+")) {
+                    return "Excepción: falink requiere comillas, variables o una expresión válida. Línea " + numLinea;
                 }
             }
 
@@ -78,7 +78,7 @@ public class Steelix {
                     if (partesDecimal.length > 1 && partesDecimal[1].length() > 7) {
                         return "Excepción: espeon excede 7 dígitos decimales. Línea " + numLinea;
                     }
-                }
+                }   
             }
         } else {
             return "Excepción: Estructura de declaración incompleta. Línea " + numLinea;
