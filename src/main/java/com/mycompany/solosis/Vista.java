@@ -4,7 +4,8 @@
  */
 package com.mycompany.solosis;
 
-// Estas son las correctas para TU proyecto
+import java.util.List;
+import com.mycompany.solosis.AnaluzadorManual;
 
 
 
@@ -152,29 +153,62 @@ public class Vista extends javax.swing.JFrame {
     
     
     private String obtenerNombreToken(int id) {
-    switch (id) {
-        // Palabras reservadas (Los tipos de dato)
-        case sym.GABITE: return "TIPO_INT (GABITE)"; 
-        case sym.ESPEON: return "TIPO_DECIMAL (ESPEON)";
-        case sym.FALINK: return "TIPO_STRING (FALINK)";
+        switch (id) {
+            // Palabras reservadas (Los tipos de dato)
+            case sym.GABITE: return "TIPO_INT (GABITE)"; 
+            case sym.ESPEON: return "TIPO_DECIMAL (ESPEON)";
+            case sym.FALINK: return "TIPO_STRING (FALINK)";
 
-        // Valores
-        case sym.ENTERO: return "VALOR_ENTERO (GABITE)"; // El 10, 20, etc.
-        case sym.STRING: return "VALOR_CADENA (FALINK)"; // Lo que va en comillas
+            // Valores
+            case sym.ENTERO: return "VALOR_ENTERO (GABITE)"; // El 10, 20, etc.
+            case sym.STRING: return "VALOR_CADENA (FALINK)"; // Lo que va en comillas
 
-        // Operadores y otros
-        case sym.ASIGNACION: return "ASIGNACION (=)";
-        case sym.SUMA: return "OPERADOR_SUMA (+)";
-        case sym.RESTA: return "OPERADOR_RESTA (-)";
-        case sym.MULT: return "OPERADOR_MULT (*)";
-        case sym.DIV: return "OPERADOR_DIV (/)";
-        case sym.ID: return "IDENTIFICADOR (NOMBRE)";
-        case sym.EOF: return "FIN_DE_ARCHIVO";
-        
-        default: return "TOKEN_OTRO (" + id + ")";
+            // Operadores y otros
+            case sym.ASIGNACION: return "ASIGNACION (=)";
+            case sym.SUMA: return "OPERADOR_SUMA (+)";
+            case sym.RESTA: return "OPERADOR_RESTA (-)";
+            case sym.MULT: return "OPERADOR_MULT (*)";
+            case sym.DIV: return "OPERADOR_DIV (/)";
+            case sym.ID: return "IDENTIFICADOR (NOMBRE)";
+            case sym.EOF: return "FIN_DE_ARCHIVO";
+
+            default: return "TOKEN_OTRO (" + id + ")";
+        }
+
     }
-}
     
+    private void btnAnalizarActionPerformed(java.awt.event.ActionEvent evt) {                                           
+        String codigo = txtEntrada.getText();
+        txtSalida.setText("Iniciando análisis...\n");
+
+        try {
+            // 1. Fase Léxica - Usamos la clase manual
+            AnalizadorManual lexer = new AnalizadorManual();
+
+            // Es vital que el tipo de la lista sea AnalizadorManual.Token
+            List<AnalizadorManual.Token> listaTokens = lexer.escanear(codigo);
+
+            // 2. Fase de Validación (Steelix)
+            Steelix validador = new Steelix();
+            String[] lineas = codigo.split("\n");
+            for (int i = 0; i < lineas.length; i++) {
+                if(!lineas[i].trim().isEmpty()) {
+                    validador.validarLinea(lineas[i], i + 1);
+                }
+            }
+
+            // 3. Fase de Interpretación
+            Interprete ejecutor = new Interprete();
+            ejecutor.ejecutar(listaTokens);
+
+            txtSalida.append("Resultados:\n" + ejecutor.obtenerLogEjecucion());
+            txtSalida.append("\n[PROCESO TERMINADO CON ÉXITO]");
+
+        } catch (Exception e) {
+            // Esto atrapará errores de Steelix o del Intérprete
+            txtSalida.append("\nERROR CRÍTICO: " + e.getMessage());
+        }
+    }
     
     /**
      * @param args the command line arguments
