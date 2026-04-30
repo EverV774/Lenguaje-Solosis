@@ -53,7 +53,7 @@ public class Interprete {
                 i = j + 1; 
             } 
 
-            else if (t.tipo == AnalizadorManual.TipoToken.LOUDRED) {
+            else if (t.tipo == AnalizadorManual.TipoToken.MEOWL) {
                 logEjecucion.append("Comando de salida: ").append(t.valor).append("\n");
 
                 int j = i + 1;
@@ -65,13 +65,13 @@ public class Interprete {
 
                 Operacion resultado = evaluarExpresion(tokensExpresion);
                 if (resultado != null) {
-                    logEjecucion.append("> SALIDA: ").append(resultado.getValor().toString()).append("\n");
+                    logEjecucion.append("> ").append(resultado.getValor().toString()).append("\n");
                 }
 
                 logEjecucion.append("Signo de cierre: ;\n");
                 logEjecucion.append("-------------------------------------------\n");
                 i = j + 1;
-            } 
+            }
             else {
                 i++;
             }

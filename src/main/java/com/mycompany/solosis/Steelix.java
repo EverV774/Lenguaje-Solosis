@@ -25,7 +25,7 @@ public class Steelix {
         
         if (linea.isEmpty()) return;
         
-        if (linea.startsWith("loudred")) {
+        if (linea.startsWith("meowl")) {
             if (!linea.endsWith(";")) {
                 throw new Exception("Excepción: Falta ';' en la instrucción loudred. Línea " + numLinea);
             }
@@ -88,7 +88,7 @@ public class Steelix {
         }
         
         if (!linea.startsWith("gabite") && !linea.startsWith("espeon") && 
-            !linea.startsWith("falink") && !linea.startsWith("loudred")) {
+            !linea.startsWith("falink") && !linea.startsWith("meowl")) {
             throw new Exception("Excepción: Instrucción no reconocida '" + linea + "'. Línea " + numLinea);
         }
     }

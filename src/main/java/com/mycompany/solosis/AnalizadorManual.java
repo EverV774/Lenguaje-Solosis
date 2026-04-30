@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  */
 public class AnalizadorManual {
     public enum TipoToken {
-        GABITE, ESPEON, FALINK, LOUDRED, // <--- Nueva
+        GABITE, ESPEON, FALINK, MEOWL,
         IDENTIFICADOR, NUMERO, ASIGNACION, PUNTO_COMA, OPERADOR, DESCONOCIDO
     }
 
@@ -29,7 +29,7 @@ public class AnalizadorManual {
     List<Token> tokens = new ArrayList<>();
     String[] lineas = codigo.split("\n");
     
-    String patronG = "\\b(gabite|espeon|falink|loudred)\\b";
+    String patronG = "\\b(gabite|espeon|falink|meowl)\\b";
     String patronID = "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b";
     String patronNum = "\\b(\\d+(\\.\\d+)?)\\b";
     String patronString = "(\"[^\"]*\")";
@@ -52,7 +52,7 @@ public class AnalizadorManual {
             if (lexema.equals("gabite")) tokens.add(new Token(TipoToken.GABITE, lexema));
             else if (lexema.equals("espeon")) tokens.add(new Token(TipoToken.ESPEON, lexema));
             else if (lexema.equals("falink")) tokens.add(new Token(TipoToken.FALINK, lexema));
-            else if (lexema.equals("loudred")) tokens.add(new Token(TipoToken.LOUDRED, lexema));
+            else if (lexema.equals("meowl")) tokens.add(new Token(TipoToken.MEOWL, lexema));
             else if (lexema.startsWith("\"")) tokens.add(new Token(TipoToken.IDENTIFICADOR, lexema)); 
             else if (lexema.matches("[\\+\\-\\*/]")) tokens.add(new Token(TipoToken.OPERADOR, lexema));
             else if (lexema.equals("?")) tokens.add(new Token(TipoToken.ASIGNACION, lexema));
