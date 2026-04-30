@@ -50,10 +50,20 @@ public class Steelix {
                 if (!valor.contains(".") || valor.matches(".*[a-zA-Z].*")) {
                     throw new Exception("Excepción: No se tienen definidos las variables correctamente. espeon requiere punto decimal. Línea " + numLinea);
                 }
-                try {
+            try {
                     Double.parseDouble(valor);
-                } catch (NumberFormatException e) {
+             } catch (NumberFormatException e) {
                     throw new Exception("Excepción: Valor numérico inválido para espeon. Línea " + numLinea);
+    }
+          // Validar máximo 10 enteros y 7 decimales
+                String[] partesDecimal = valor.split("\\.");
+                String parteEntera  = partesDecimal[0].replace("-", "");
+                String parteDecimal = partesDecimal[1];
+                if (parteEntera.length() > 10) {
+                    throw new Exception("Excepción: espeon excede 10 dígitos enteros. Línea " + numLinea);
+                }
+                if (parteDecimal.length() > 7) {
+                    throw new Exception("Excepción: espeon excede 7 dígitos decimales. Línea " + numLinea);
                 }
             }
         }
