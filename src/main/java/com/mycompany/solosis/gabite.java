@@ -14,6 +14,11 @@ public class gabite extends Operacion {
     private int valor;
 
     public gabite(int valor) {
+        if (valor < -999999 || valor > 999999){
+        throw new IllegalArgumentException(
+        "Gabite solo acepta valores entre -999999 y 999999"
+        );
+        }
         this.valor = valor;
     }
 

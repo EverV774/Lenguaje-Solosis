@@ -9,52 +9,64 @@ package com.mycompany.solosis;
  * @author Heber
  */
 public class VentanaTokens extends javax.swing.JDialog {
-
-    /**
-     * Creates new form VentanaTokens
-     */
+ 
     public VentanaTokens(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        this.setTitle("Análisis Léxico - Tokens Solosis");
+        this.setTitle("Análisis Léxico – Tokens Solosis");
     }
-    
-    public void llenarTabla(java.util.List<Object[]> datos) {
-        javax.swing.table.DefaultTableModel modelo = (javax.swing.table.DefaultTableModel) tblTokens.getModel();
-        modelo.setRowCount(0); // Limpiar
-
-        // Lista de palabras reservadas de tu lenguaje (puedes ajustarla)
-        java.util.Set<String> reservadas = new java.util.HashSet<>();
-        reservadas.add("gabite");
-        reservadas.add("falink");
-        reservadas.add("si");
-        reservadas.add("sino");
-        reservadas.add("mientras");
-        reservadas.add("para");
-        reservadas.add("retornar");
-
-        for (Object[] fila : datos) {
-            String tipo = fila[0].toString();
-            String valor = fila[1] != null ? fila[1].toString() : "";
-            Object linea = fila[2];
-            Object columna = fila[3];
-
-            // Determinar si es palabra reservada
-            String esReservada = reservadas.contains(valor.toLowerCase()) ? "Sí" : "No";
-
-            // Construir nueva fila con columnas extra
-            Object[] nuevaFila = {
-                linea,        // No. Línea (al inicio)
-                tipo,
-                valor,
-                linea,
-                columna,
-                esReservada   // Nueva columna
-            };
-
-            modelo.addRow(nuevaFila);
+ 
+    /** Convierte el nombre interno del patrón al patrón regex legible. */
+    private static String resolverPatronLegible(String nombrePatron) {
+        switch (nombrePatron) {
+            case "PALABRA_RESERVADA_GABITE": return "gabite";
+            case "PALABRA_RESERVADA_ESPEON": return "espeon";
+            case "PALABRA_RESERVADA_FALINK": return "falink";
+            case "PALABRA_RESERVADA_MEOWL":  return "meowl";
+            case "LITERAL_ENTERO":           return "[0-9]+";
+            case "LITERAL_DECIMAL":          return "[0-9]+\\.[0-9]+";
+            case "LITERAL_STRING":           return "\"[^\"]*\"";
+            case "IDENTIFICADOR":            return "[a-zA-Z_][a-zA-Z0-9_]*";
+            case "ASIGNACION":               return "\\?";
+            case "OPERADOR_SUMA":            return "\\+";
+            case "OPERADOR_RESTA":           return "-";
+            case "OPERADOR_MULT":            return "\\*";
+            case "OPERADOR_DIV":             return "/";
+            case "PUNTO_COMA":               return ";";
+            case "COMENTARIO":               return "#.*";
+            default:                          return nombrePatron;
         }
     }
+ 
+    /** Llena la tabla con los datos de los tokens incluyendo lexema y patrón. */
+    public void llenarTabla(java.util.List<Object[]> datos) {
+        javax.swing.table.DefaultTableModel modelo =
+                (javax.swing.table.DefaultTableModel) tblTokens.getModel();
+        modelo.setRowCount(0);
+ 
+        // ← SE AGREGÓ "?" Y "meowl" COMO PALABRAS RESERVADAS
+        java.util.Set<String> reservadas = new java.util.HashSet<>(java.util.Arrays.asList(
+            "gabite", "espeon", "falink", "meowl", "?"
+        ));
+ 
+        int contador = 1;  // Bug 1 fix: contador incremental para No. Lista
+ 
+        for (Object[] fila : datos) {
+            String tipo    = fila[0] != null ? fila[0].toString() : "";
+            String lexema  = fila[1] != null ? fila[1].toString() : "";
+            String patron  = fila[2] != null ? fila[2].toString() : "";
+            Object linea   = fila[3];
+            Object columna = fila[4];
+ 
+            String esReservada = reservadas.contains(lexema.toLowerCase()) ? "Sí" : "No";
+            String patronLegible = resolverPatronLegible(patron);  // Bug 2 fix: patrón legible
+ 
+            modelo.addRow(new Object[]{ contador, tipo, lexema, patronLegible, linea, columna, esReservada });
+            contador++;  // Bug 1 fix: incrementar después de cada fila
+        }
+    }
+
+ 
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

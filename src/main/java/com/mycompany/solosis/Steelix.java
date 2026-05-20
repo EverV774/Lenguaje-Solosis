@@ -4,87 +4,159 @@
  */
 package com.mycompany.solosis;
 
+import com.mycompany.solosis.AnalizadorManual.TipoToken;
+import com.mycompany.solosis.AnalizadorManual.Token;
+import java.util.List;
 /**
  *
  * @author crack
  */
 public class Steelix {
-    public String validarLinea(String linea, int numLinea) {
+
+    public String validarLinea(String linea, int numLinea)
+            throws ExcepcionSintactica, ExcepcionSemantica {
+
+        // Eliminar comentarios
         if (linea.contains("#")) {
             linea = linea.substring(0, linea.indexOf("#"));
         }
-
         linea = linea.trim();
-        if (linea.isEmpty()) return null; 
-        
-        if (linea.startsWith("meowl")) {
-            if (!linea.endsWith(";")) {
-                return "Excepción: Falta ';' en la instrucción meowl. Línea " + numLinea;
-            }
-            return null; 
-        }
+        if (linea.isEmpty()) return null;
 
+        // Toda instrucción debe terminar en ';'
         if (!linea.endsWith(";")) {
-            return "Excepción: Falta signo de cierre ';' al final. Línea " + numLinea;
+            throw new ExcepcionSintactica("Falta el signo de cierre ';' al final", numLinea);
         }
 
+        // No se permite '=' como asignación
         if (linea.contains("=")) {
-            return "Excepción: Operador inválido. Use '?' para asignación. Línea " + numLinea;
+            throw new ExcepcionSintactica("Operador inválido '='. Use '?' para asignación", numLinea);
         }
 
-        if (!linea.startsWith("gabite") && !linea.startsWith("espeon") && 
-            !linea.startsWith("falink")) {
-            return "Excepción: Instrucción no reconocida '" + linea + "'. Línea " + numLinea;
+        // Normalizar: insertar espacio entre palabra reservada y lo que le sigue pegado
+        // Ej: "gabitea?3;" -> "gabite a?3;"   "meowla;" -> "meowl a;"
+        linea = linea.replaceAll("(gabite|espeon|falink|meowl)([a-zA-Z0-9_?])", "$1 $2");
+
+        // Tokenizar con AnalizadorManual (funciona con o sin espacios)
+        List<Token> tokens;
+        try {
+            AnalizadorManual analizador = new AnalizadorManual();
+            tokens = analizador.escanear(linea);
+        } catch (ExcepcionLexica | ExcepcionLimite e) {
+            throw new ExcepcionSintactica("Error léxico: " + e.getMessage(), numLinea);
         }
 
-        String sinPuntoComa = linea.replace(";", "");
-        String[] partes = sinPuntoComa.split("\\s+");
+        if (tokens.isEmpty()) return null;
 
-        if (partes.length >= 4) {
-            String tipo = partes[0];
-            StringBuilder expresionCompleta = new StringBuilder();
-            for (int k = 3; k < partes.length; k++) {
-                expresionCompleta.append(partes[k]);
-            }
-            String valor = expresionCompleta.toString();
+        Token primero = tokens.get(0);
 
-            if (tipo.equals("falink")) {
-                // Ahora permite letras, números, comillas, espacios y el signo +
-                if (!valor.startsWith("\"") && !valor.matches("[a-zA-Z0-9\\+\\s\"]+")) {
-                    return "Excepción: falink requiere comillas, variables o una expresión válida. Línea " + numLinea;
-                }
+        // ── Validar meowl ──────────────────────────────────────────────
+        if (primero.tipo == TipoToken.MEOWL) {
+            if (tokens.size() < 3) {
+                throw new ExcepcionSintactica(
+                    "Instrucción meowl incompleta. Estructura esperada: meowl <id>;", numLinea);
             }
-
-            if (tipo.equals("gabite")) {
-                if (valor.contains(".")) {
-                    return "Excepción: gabite solo acepta enteros. Línea " + numLinea;
-                }
-                String soloOperandos = valor.replaceAll("[\\+\\-\\*/]", " ");
-                for (String op : soloOperandos.split("\\s+")) {
-                    if (!op.matches("\\d+") && !op.matches("[a-zA-Z]+")) {
-                        return "Excepción: Valor o variable inválida para gabite. Línea " + numLinea;
-                    }
-                }
-            }
-
-            if (tipo.equals("espeon")) {
-                if (valor.matches("[0-9.]+")) {
-                    if (!valor.contains(".")) {
-                        return "Excepción: espeon requiere punto decimal. Línea " + numLinea;
-                    }
-                    String[] partesDecimal = valor.split("\\.");
-                    if (partesDecimal[0].replace("-", "").length() > 10) {
-                        return "Excepción: espeon excede 10 dígitos enteros. Línea " + numLinea;
-                    }
-                    if (partesDecimal.length > 1 && partesDecimal[1].length() > 7) {
-                        return "Excepción: espeon excede 7 dígitos decimales. Línea " + numLinea;
-                    }
-                }   
-            }
-        } else {
-            return "Excepción: Estructura de declaración incompleta. Línea " + numLinea;
+            return null;
         }
 
-        return null; 
+        // ── Validar declaraciones gabite / espeon / falink ─────────────
+        if (primero.tipo == TipoToken.GABITE ||
+            primero.tipo == TipoToken.ESPEON ||
+            primero.tipo == TipoToken.FALINK) {
+
+            // Mínimo: TIPO  ID  ?  VALOR  ;  = 5 tokens
+            if (tokens.size() < 5) {
+                throw new ExcepcionSintactica(
+                    "Declaración incompleta. Estructura esperada: <tipo> <id> ? <valor>", numLinea);
+            }
+
+            Token tokId  = tokens.get(1);
+            Token tokAsg = tokens.get(2);
+
+            if (tokId.tipo != TipoToken.IDENTIFICADOR) {
+                throw new ExcepcionSintactica(
+                    "Se esperaba un identificador después de '" + primero.lexema + "'", numLinea);
+            }
+            if (tokAsg.tipo != TipoToken.ASIGNACION) {
+                throw new ExcepcionSintactica(
+                    "Se esperaba '?' después del identificador '" + tokId.lexema + "'", numLinea);
+            }
+
+            // Reconstruir valor (tokens entre '?' y ';')
+            StringBuilder expresionSB = new StringBuilder();
+            for (int k = 3; k < tokens.size() - 1; k++) {
+                expresionSB.append(tokens.get(k).lexema);
+            }
+            String valor = expresionSB.toString();
+
+            // ── Validaciones semánticas por tipo ──────────────────────
+            switch (primero.tipo) {
+
+                case GABITE:
+                    if (valor.contains(".")) {
+                        throw new ExcepcionSemantica(
+                            "gabite solo acepta valores enteros (sin punto decimal)", numLinea);
+                    }
+                    for (int k = 3; k < tokens.size() - 1; k++) {
+                        Token tok = tokens.get(k);
+                        if (tok.tipo != TipoToken.ENTERO &&
+                            tok.tipo != TipoToken.IDENTIFICADOR &&
+                            tok.tipo != TipoToken.OPERADOR_SUMA &&
+                            tok.tipo != TipoToken.OPERADOR_RESTA &&
+                            tok.tipo != TipoToken.OPERADOR_MULT &&
+                            tok.tipo != TipoToken.OPERADOR_DIV) {
+                            throw new ExcepcionSemantica(
+                                "Valor inválido para gabite: '" + tok.lexema + "'", numLinea);
+                        }
+                    }
+                    break;
+
+                case ESPEON:
+                    for (int k = 3; k < tokens.size() - 1; k++) {
+                        Token tok = tokens.get(k);
+                        if (tok.tipo != TipoToken.DECIMAL &&
+                            tok.tipo != TipoToken.ENTERO &&
+                            tok.tipo != TipoToken.IDENTIFICADOR &&
+                            tok.tipo != TipoToken.OPERADOR_SUMA &&
+                            tok.tipo != TipoToken.OPERADOR_RESTA &&
+                            tok.tipo != TipoToken.OPERADOR_MULT &&
+                            tok.tipo != TipoToken.OPERADOR_DIV) {
+                            throw new ExcepcionSemantica(
+                                "Valor inválido para espeon: '" + tok.lexema + "'", numLinea);
+                        }
+                    }
+                    // Validar límites si es literal decimal puro
+                    if (valor.matches("[0-9.]+") && valor.contains(".")) {
+                        String[] partesDec = valor.split("\\.");
+                        if (partesDec[0].length() > 10) {
+                            throw new ExcepcionSemantica(
+                                "espeon excede el límite de 10 dígitos enteros", numLinea);
+                        }
+                        if (partesDec.length > 1 && partesDec[1].length() > 7) {
+                            throw new ExcepcionSemantica(
+                                "espeon excede el límite de 7 dígitos decimales", numLinea);
+                        }
+                    }
+                    break;
+
+                case FALINK:
+                    for (int k = 3; k < tokens.size() - 1; k++) {
+                        Token tok = tokens.get(k);
+                        if (tok.tipo != TipoToken.STRING &&
+                            tok.tipo != TipoToken.IDENTIFICADOR &&
+                            tok.tipo != TipoToken.OPERADOR_SUMA) {
+                            throw new ExcepcionSemantica(
+                                "Valor inválido para falink: '" + tok.lexema + "'", numLinea);
+                        }
+                    }
+                    break;
+            }
+
+            return null;
+        }
+
+        // Si no empieza con palabra reservada conocida
+        throw new ExcepcionSintactica(
+            "Instrucción no reconocida: '" + primero.lexema + "'", numLinea);
     }
 }

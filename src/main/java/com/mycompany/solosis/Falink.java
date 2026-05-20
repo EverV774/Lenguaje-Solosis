@@ -12,6 +12,11 @@ public class Falink extends Operacion {
     private String valor;
 
     public Falink(String valor) {
+                if (valor.length() > 30){
+        throw new IllegalArgumentException(
+        "Falink solo acepta 30 caracteres"
+        );
+        }
         this.valor = valor;
     }
 

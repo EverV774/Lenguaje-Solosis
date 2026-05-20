@@ -25,11 +25,12 @@ public class Vista extends javax.swing.JFrame {
         txtEntrada.setForeground(Color.WHITE);
         txtEntrada.setCaretColor(Color.WHITE); // El cursor que parpadea
         txtEntrada.setFont(new Font("Consolas", Font.PLAIN, 14));
-
+ 
         // Colores para la consola de salida
         txtSalida.setBackground(new Color(20, 20, 20));
         txtSalida.setForeground(Color.CYAN);
     }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -127,88 +128,103 @@ public class Vista extends javax.swing.JFrame {
     private void btnTokensActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTokensActionPerformed
         java.util.ArrayList<Object[]> listaTokens = new java.util.ArrayList<>();
         String codigo = txtEntrada.getText();
-
+ 
         try {
-            java.io.StringReader reader = new java.io.StringReader(codigo);
-            Lexer lexer = new Lexer(reader); 
-            java_cup.runtime.Symbol token;
-            
-            while (true) {
-                token = lexer.next_token();
-                if (token.sym == sym.EOF) break;
-                
-                String tipo = obtenerNombreToken(token.sym);
-                String valor = (token.value != null) ? token.value.toString() : "";
-                int linea = token.left + 1;
-                int columna = token.right + 1;
-                
-                listaTokens.add(new Object[]{tipo, valor, linea, columna});
+            // Usar el AnalizadorManual para obtener lexemas y patrones
+            AnalizadorManual analizador = new AnalizadorManual();
+            java.util.List<AnalizadorManual.Token> tokens = analizador.escanear(codigo);
+ 
+            for (AnalizadorManual.Token tok : tokens) {
+                String tipo    = tok.tipo.toString();
+                String lexema  = tok.lexema;
+                String patron  = tok.patron;
+                int    linea   = tok.linea;
+                int    columna = tok.columna;
+                // fila: [tipo, lexema, patron, linea, columna]
+                listaTokens.add(new Object[]{ tipo, lexema, patron, linea, columna });
             }
-            
+ 
             VentanaTokens vt = new VentanaTokens(this, true);
             vt.llenarTabla(listaTokens);
             vt.setLocationRelativeTo(null);
             vt.setVisible(true);
-
+ 
+        } catch (ExcepcionLexica e) {
+            txtSalida.setForeground(java.awt.Color.RED);
+            txtSalida.setText(e.getMessage());
+        } catch (ExcepcionLimite e) {
+            txtSalida.setForeground(java.awt.Color.RED);
+            txtSalida.setText(e.getMessage());
         } catch (Exception e) {
+            txtSalida.setForeground(java.awt.Color.RED);
             txtSalida.setText("Error en el análisis léxico: " + e.getMessage());
         }
+
     }//GEN-LAST:event_btnTokensActionPerformed
 
     private void btnAnalizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAnalizarActionPerformed
-        // TODO add your handling code here:
-        String codigo = txtEntrada.getText();
+         String codigo = txtEntrada.getText();
         txtSalida.setText("");
         txtSalida.setForeground(Color.BLACK);
-
+ 
         List<String> erroresEncontrados = new ArrayList<>();
         String[] lineas = codigo.split("\n");
         Steelix validador = new Steelix();
-
+ 
+        // Fase 1: validación sintáctica/semántica línea por línea
         for (int i = 0; i < lineas.length; i++) {
-            String error = validador.validarLinea(lineas[i], i + 1);
-            if (error != null) {
-                erroresEncontrados.add(error);
+            try {
+                validador.validarLinea(lineas[i], i + 1);
+            } catch (ExcepcionSintactica | ExcepcionSemantica e) {
+                erroresEncontrados.add(e.getMessage());
+            } catch (Exception e) {
+                erroresEncontrados.add("Error desconocido línea " + (i + 1) + ": " + e.getMessage());
             }
         }
-        
+ 
         if (!erroresEncontrados.isEmpty()) {
             txtSalida.setForeground(Color.RED);
             txtSalida.append("--- SE ENCONTRARON ERRORES ---\n");
-            for (String err : erroresEncontrados) {
-                txtSalida.append(err + "\n");
-            }
+            for (String err : erroresEncontrados) txtSalida.append(err + "\n");
             txtSalida.append("\n[ANÁLISIS TERMINADO CON " + erroresEncontrados.size() + " ERRORES]");
-        } else {
-            try {
-                AnalizadorManual lexer = new AnalizadorManual();
-                List<AnalizadorManual.Token> tokens = lexer.escanear(codigo);
-
-                Interprete ejecutor = new Interprete();
-                ejecutor.ejecutar(tokens);
-
-                txtSalida.setForeground(new Color(0, 150, 0)); // Verde éxito
-                txtSalida.append(ejecutor.obtenerLogEjecucion());
-                txtSalida.append("\n>>> [SOLOSIS COMPILADO CON ÉXITO]");
-            } catch (Exception e) {
-                // Errores que solo salen al ejecutar (como variables duplicadas)
-                txtSalida.setForeground(Color.RED);
-                txtSalida.setText("ERROR DE EJECUCIÓN: " + e.getMessage());
-            }
+            return;
         }
+ 
+        // Fase 2: análisis léxico y ejecución
+        try {
+            AnalizadorManual lexer = new AnalizadorManual();
+            List<AnalizadorManual.Token> tokens = lexer.escanear(codigo);
+ 
+            Interprete ejecutor = new Interprete();
+            ejecutor.ejecutar(tokens);
+ 
+            txtSalida.setForeground(new Color(0, 150, 0));
+            txtSalida.append(ejecutor.obtenerLogEjecucion());
+            txtSalida.append("\n>>> [SOLOSIS COMPILADO CON ÉXITO]");
+ 
+        } catch (ExcepcionLexica e) {
+            txtSalida.setForeground(Color.RED);
+            txtSalida.setText(e.getMessage());
+        } catch (ExcepcionLimite e) {
+            txtSalida.setForeground(Color.RED);
+            txtSalida.setText(e.getMessage());
+        } catch (ExcepcionSemantica e) {
+            txtSalida.setForeground(Color.RED);
+            txtSalida.setText(e.getMessage());
+        } catch (Exception e) {
+            txtSalida.setForeground(Color.RED);
+            txtSalida.setText("ERROR DE EJECUCIÓN: " + e.getMessage());
+        }
+
     }//GEN-LAST:event_btnAnalizarActionPerformed
     
     private String obtenerNombreToken(int id) {
         switch (id) {
-            case sym.GABITE: return "TIPO_INT (GABITE)"; 
+            case sym.GABITE: return "TIPO_INT (GABITE)";
             case sym.ESPEON: return "TIPO_DECIMAL (ESPEON)";
             case sym.FALINK: return "TIPO_STRING (FALINK)";
-
-            // Valores
             case sym.ENTERO: return "VALOR_ENTERO (GABITE)";
             case sym.STRING: return "VALOR_CADENA (FALINK)";
-
-            // Operadores y otros
             case sym.ASIGNACION: return "ASIGNACION (=)";
             case sym.SUMA: return "OPERADOR_SUMA (+)";
             case sym.RESTA: return "OPERADOR_RESTA (-)";
@@ -216,11 +232,10 @@ public class Vista extends javax.swing.JFrame {
             case sym.DIV: return "OPERADOR_DIV (/)";
             case sym.ID: return "IDENTIFICADOR (NOMBRE)";
             case sym.EOF: return "FIN_DE_ARCHIVO";
-
             default: return "TOKEN_OTRO (" + id + ")";
         }
-
     }
+
     
     /**
      * @param args the command line arguments
