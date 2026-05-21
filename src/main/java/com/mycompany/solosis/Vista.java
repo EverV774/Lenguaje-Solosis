@@ -163,34 +163,42 @@ public class Vista extends javax.swing.JFrame {
     }//GEN-LAST:event_btnTokensActionPerformed
 
     private void btnAnalizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAnalizarActionPerformed
-         String codigo = txtEntrada.getText();
+        String codigo = txtEntrada.getText();
         txtSalida.setText("");
-        txtSalida.setForeground(Color.BLACK);
- 
-        List<String> erroresEncontrados = new ArrayList<>();
+        
+        List<String> erroresSintacticos = new ArrayList<>();
         String[] lineas = codigo.split("\n");
         Steelix validador = new Steelix();
  
-        // Fase 1: validación sintáctica/semántica línea por línea
+        // Fase 1: Validación Estructural (Sintáctica) sin detener el bucle
         for (int i = 0; i < lineas.length; i++) {
+            String lineaTexto = lineas[i].trim();
+            if (lineaTexto.isEmpty() || lineaTexto.startsWith("#")) {
+                continue; // Ignorar líneas vacías o comentarios puros
+            }
             try {
                 validador.validarLinea(lineas[i], i + 1);
             } catch (ExcepcionSintactica | ExcepcionSemantica e) {
-                erroresEncontrados.add(e.getMessage());
+                erroresSintacticos.add("Línea " + (i + 1) + ": " + e.getMessage());
             } catch (Exception e) {
-                erroresEncontrados.add("Error desconocido línea " + (i + 1) + ": " + e.getMessage());
+                erroresSintacticos.add("Error crítico línea " + (i + 1) + ": " + e.getMessage());
             }
         }
  
-        if (!erroresEncontrados.isEmpty()) {
+        // Si hay errores de estructura graves (ej: falta un ';'), los mostramos en ROJO de golpe
+        if (!erroresSintacticos.isEmpty()) {
             txtSalida.setForeground(Color.RED);
-            txtSalida.append("--- SE ENCONTRARON ERRORES ---\n");
-            for (String err : erroresEncontrados) txtSalida.append(err + "\n");
-            txtSalida.append("\n[ANÁLISIS TERMINADO CON " + erroresEncontrados.size() + " ERRORES]");
+            txtSalida.append("❌ SE ENCONTRARON ERRORES SINTÁCTICOS EN EL PROGRAMA:\n");
+            txtSalida.append("───────────────────────────────────────────────────\n");
+            for (String err : erroresSintacticos) {
+                txtSalida.append(err + "\n");
+            }
+            txtSalida.append("───────────────────────────────────────────────────\n");
+            txtSalida.append("\n>>> ANÁLISIS SINTÁCTICO ABORTADO <<<");
             return;
         }
  
-        // Fase 2: análisis léxico y ejecución
+        // Fase 2: Análisis Léxico y Ejecución Dinámica con acumulación de errores de tipo
         try {
             AnalizadorManual lexer = new AnalizadorManual();
             List<AnalizadorManual.Token> tokens = lexer.escanear(codigo);
@@ -198,24 +206,27 @@ public class Vista extends javax.swing.JFrame {
             Interprete ejecutor = new Interprete();
             ejecutor.ejecutar(tokens);
  
-            txtSalida.setForeground(new Color(0, 150, 0));
-            txtSalida.append(ejecutor.obtenerLogEjecucion());
-            txtSalida.append("\n>>> [SOLOSIS COMPILADO CON ÉXITO]");
+            String resultadoLog = ejecutor.obtenerLogEjecucion();
+            
+            // Condición infalible: si el log contiene la cruz o la palabra reservada de fallo
+            if (resultadoLog.contains("ERRor") || resultadoLog.contains("ABORTADA")) {
+                txtSalida.setForeground(Color.RED); // ¡Pintar en ROJO pasional si falló algo semántico!
+            } else {
+                txtSalida.setForeground(new Color(0, 150, 0)); // VERDE éxito si corrió limpio
+            }
+            
+            txtSalida.setText(resultadoLog);
  
         } catch (ExcepcionLexica e) {
             txtSalida.setForeground(Color.RED);
-            txtSalida.setText(e.getMessage());
+            txtSalida.setText("Error Léxico: " + e.getMessage());
         } catch (ExcepcionLimite e) {
             txtSalida.setForeground(Color.RED);
-            txtSalida.setText(e.getMessage());
-        } catch (ExcepcionSemantica e) {
-            txtSalida.setForeground(Color.RED);
-            txtSalida.setText(e.getMessage());
+            txtSalida.setText("Error de Límites: " + e.getMessage());
         } catch (Exception e) {
             txtSalida.setForeground(Color.RED);
-            txtSalida.setText("ERROR DE EJECUCIÓN: " + e.getMessage());
+            txtSalida.setText("ERROR CRÍTICO DE SISTEMA: " + e.getMessage());
         }
-
     }//GEN-LAST:event_btnAnalizarActionPerformed
     
     private String obtenerNombreToken(int id) {

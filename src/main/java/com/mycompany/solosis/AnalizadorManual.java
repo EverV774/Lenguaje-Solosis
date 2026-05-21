@@ -56,6 +56,7 @@ public class AnalizadorManual {
         }
 
         /** Alias de compatibilidad */
+        /** Alias de compatibilidad */
         public String getValor() { return lexema; }
 
         @Override
@@ -74,23 +75,25 @@ public class AnalizadorManual {
         { "PALABRA_RESERVADA_ESPEON",  "espeon(?![a-zA-Z0-9_])"         },
         { "PALABRA_RESERVADA_FALINK",  "falink(?![a-zA-Z0-9_])"         },
         { "PALABRA_RESERVADA_MEOWL",   "meowl(?![a-zA-Z0-9_])"          },
-        { "LITERAL_STRING",            "\"[^\"]*\""                      },
+        // CORRECCIÓN: Ahora el Regex acepta tanto "..." como '...'
+        { "LITERAL_STRING",            "\"[^\"]*\"|'[^']*'"             },
         { "LITERAL_DECIMAL",           "\\d+\\.\\d+"                    },
         { "LITERAL_ENTERO",            "\\d+(?![a-zA-Z_])"              },
         { "IDENTIFICADOR",             "[a-zA-Z_][a-zA-Z0-9_]*"         },
-        { "ASIGNACION",                "\\?"                             },
-        { "OPERADOR_SUMA",             "\\+"                             },
-        { "OPERADOR_RESTA",            "-"                               },
-        { "OPERADOR_MULT",             "\\*"                             },
-        { "OPERADOR_DIV",              "/"                               },
-        { "PUNTO_COMA",                ";"                               },
+        { "ASIGNACION",                "\\?"                            },
+        { "OPERADOR_SUMA",             "\\+"                            },
+        { "OPERADOR_RESTA",            "-"                              },
+        { "OPERADOR_MULT",             "\\*"                            },
+        { "OPERADOR_DIV",              "/"                              },
+        { "PUNTO_COMA",                ";"                              },
     };
 
     private static final Pattern PATRON_TOKENS;
 
     /** Detecta cualquier carácter que no sea parte del alfabeto válido de Solosis */
+    // CORRECCIÓN: Agregada la comilla simple (\') al grupo de caracteres permitidos
     private static final Pattern PATRON_INVALIDO =
-            Pattern.compile("[^\\w\\s\"\\?\\+\\-\\*/;#\\.]");
+            Pattern.compile("[^\\w\\s\"'\\?\\+\\-\\*/;#\\.]");
 
     static {
         StringBuilder sb = new StringBuilder();
@@ -167,7 +170,8 @@ public class AnalizadorManual {
             case "/":      return "OPERADOR_DIV";
             case ";":      return "PUNTO_COMA";
         }
-        if (lexema.startsWith("\""))         return "LITERAL_STRING";
+        // CORRECCIÓN: Ahora identifica el nombre del patrón si empieza con comilla simple
+        if (lexema.startsWith("\"") || lexema.startsWith("'")) return "LITERAL_STRING";
         if (lexema.matches("\\d+\\.\\d+")) return "LITERAL_DECIMAL";
         if (lexema.matches("\\d+"))          return "LITERAL_ENTERO";
         if (lexema.matches("[a-zA-Z_][a-zA-Z0-9_]*")) return "IDENTIFICADOR";
@@ -187,7 +191,8 @@ public class AnalizadorManual {
             case "/":      return TipoToken.OPERADOR_DIV;
             case ";":      return TipoToken.PUNTO_COMA;
             default:
-                if (lexema.startsWith("\""))           return TipoToken.STRING;
+                // Acepta que empiece con comillas dobles O comillas simples
+                if (lexema.startsWith("\"") || lexema.startsWith("'")) return TipoToken.STRING;
                 if (lexema.matches("\\d+\\.\\d+"))     return TipoToken.DECIMAL;
                 if (lexema.matches("\\d+"))            return TipoToken.ENTERO;
                 return TipoToken.IDENTIFICADOR;
