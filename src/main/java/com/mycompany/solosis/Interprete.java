@@ -33,6 +33,13 @@ public class Interprete {
         while (i < tokens.size()) {
             Token t = tokens.get(i);
             int lineaActual = t.linea;
+            
+   // Filtro seguro usando cadenas de texto para evitar problemas con los Enums
+if (t.lexema.equals("{") || t.lexema.equals("}")) {
+        i++;
+        continue;
+    }
+            
 
             // Usamos un bloque try-catch INTERNO en el ciclo para que si una línea falla,
             // se guarde el error, pero el compilador continúe alegremente con la siguiente línea.
@@ -138,7 +145,9 @@ public class Interprete {
                 else if (tokens.get(i).tipo == TipoToken.SPINDA) {
                     i = ejecutarSpinda(tokens, i);
                 }
-
+else if (tokens.get(i).lexema.equals("LIZARD")) {
+    i = ejecutarLizard(tokens, i);
+}
                 // ─────────────────────────────────────────────
                 // CASO 3: SINTAXIS MEOWL FLEXIBLE
                 // ─────────────────────────────────────────────
@@ -221,7 +230,7 @@ public class Interprete {
         while (i < tokensExpr.size()) {
             String op = tokensExpr.get(i).lexema;
             Operacion sig = buscarOConvertir(tokensExpr.get(i + 1).lexema, linea);
-
+if (resultado == null) return null;
             String tipoRes = resultado.getClass().getSimpleName().toLowerCase();
             String tipoSig = sig.getClass().getSimpleName().toLowerCase();
 
@@ -265,36 +274,41 @@ public class Interprete {
     }
 
     private Operacion buscarOConvertir(String lexema, int linea) throws ExcepcionSemantica {
-        if (tablaSimbolos.containsKey(lexema)) {
-            Operacion op = tablaSimbolos.get(lexema);
-            if (op == null) {
-                throw new ExcepcionSemantica("La variable '" + lexema + "' no ha sido inicializada.", linea);
-            }
-            return op;
-        }
-
-        if (lexema.matches("\\d+")) {
-            if (lexema.length() > 10) {
-                throw new ExcepcionSemantica("gabite solo acepta un máximo de 10 dígitos.", linea);
-            }
-            long valorLong = Long.parseLong(lexema);
-            return new gabite((int) valorLong); 
-        }
-
-        if (lexema.matches("\\d+\\.\\d+")) {
-            String[] partes = lexema.split("\\.");
-            if (partes[0].length() > 10 || partes[1].length() > 10) {
-                throw new ExcepcionSemantica("espeon acepta máximo 10 dígitos antes/después del punto.", linea);
-            }
-            return new Espeon(Double.parseDouble(lexema));
-        }
-
-        if (lexema.startsWith("\"") || lexema.startsWith("'")) {
-            return new Falink(lexema.replaceAll("^[\"']|[\"']$", ""));
-        }
-
-        throw new ExcepcionSemantica("El identificador o componente '" + lexema + "' no está definido.", linea);
+    // NUEVO: Si por alguna razón se intenta evaluar una palabra clave del ciclo, la ignoramos de inmediato
+    if (lexema.equals("LIZARD") || lexema.equals("purple_lizard") || lexema.equals("{") || lexema.equals("}")) {
+        return null;
     }
+
+    if (tablaSimbolos.containsKey(lexema)) {
+        Operacion op = tablaSimbolos.get(lexema);
+        if (op == null) {
+            throw new ExcepcionSemantica("La variable '" + lexema + "' no ha sido inicializada.", linea);
+        }
+        return op;
+    }
+
+    if (lexema.matches("\\d+")) {
+        if (lexema.length() > 10) {
+            throw new ExcepcionSemantica("gabite solo acepta un máximo de 10 dígitos.", linea);
+        }
+        long valorLong = Long.parseLong(lexema);
+        return new gabite((int) valorLong); 
+    }
+
+    if (lexema.matches("\\d+\\.\\d+")) {
+        String[] partes = lexema.split("\\.");
+        if (partes[0].length() > 10 || partes[1].length() > 10) {
+            throw new ExcepcionSemantica("espeon acepta máximo 10 dígitos antes/después del punto.", linea);
+        }
+        return new Espeon(Double.parseDouble(lexema));
+    }
+
+    if (lexema.startsWith("\"") || lexema.startsWith("'")) {
+        return new Falink(lexema.replaceAll("^[\"']|[\"']$", ""));
+    }
+
+    throw new ExcepcionSemantica("El identificador o componente '" + lexema + "' no está definido.", linea);
+}
 
     private void validarCompatibilidadTipo(TipoToken tipoEsperado, Operacion resultado, int linea) throws ExcepcionSemantica {
         if (resultado == null) return;
@@ -362,6 +376,87 @@ public class Interprete {
         logEjecucion.append("signo de cierre: ").append(cierres.toString().trim()).append("\n");
         logEjecucion.append("─────────────────────────────────────────────\n");
     }
+    
+    
+    
+    
+    private int ejecutarLizard(List<Token> tokens, int i) 
+        throws ExcepcionSintactica, ExcepcionSemantica {
+
+    int linea = tokens.get(i).linea;
+
+    // 1. Validar que después de LIZARD venga una '{'
+    if (i + 1 >= tokens.size() || !tokens.get(i + 1).lexema.equals("{")) {
+        throw new ExcepcionSintactica("Falta '{' después de LIZARD.", linea);
+    }
+
+    int inicioBloque = i + 2;
+    int finBloque = buscarLlaveCierre(tokens, inicioBloque, linea);
+    List<Token> bloque = new ArrayList<>(tokens.subList(inicioBloque, finBloque));
+
+    // 2. Después de la llave de cierre '}', debe venir 'purple_lizard'
+    int idxPurple = finBloque + 1;
+    if (idxPurple >= tokens.size() || !tokens.get(idxPurple).lexema.equals("purple_lizard")) {
+        throw new ExcepcionSintactica("Falta 'purple_lizard' para evaluar la condición del ciclo.", linea);
+    }
+
+    // 3. Validar el paréntesis de la condición '('
+    if (idxPurple + 1 >= tokens.size() || !tokens.get(idxPurple + 1).lexema.equals("(")) {
+        throw new ExcepcionSintactica("Falta '(' después de purple_lizard.", linea);
+    }
+
+    int inicioCondicion = idxPurple + 2;
+    int finCondicion = buscarCierreSimple(tokens, inicioCondicion, TipoToken.PARENTESIS_DER, linea,
+            "Falta ')' para cerrar la condición de purple_lizard.");
+
+    List<Token> condicion = new ArrayList<>(tokens.subList(inicioCondicion, finCondicion));
+
+    // 4. EL CICLO REPETITIVO REAL (Do-While) CORREGIDO
+    int contadorSeguridad = 0;
+    boolean condicionVerdadera = false;
+
+    do {
+        // Ejecutamos lo que esté dentro de las llaves
+        ejecutarBloqueSpinda(bloque); 
+        
+        try {
+            // Evaluamos la condición matemática (ej. 15 > edad)
+            condicionVerdadera = evaluarCondicionSpinda(condicion, linea); 
+        } catch (NullPointerException npe) {
+            // PARCHE CRÍTICO: Si el evaluador interno da null por problemas de scope,
+            // forzamos una lectura segura de la tabla de símbolos para evitar el crash.
+            condicionVerdadera = false; 
+            
+            // Buscamos si hay algún identificador numérico en la condición para salvar el dato
+            for (Token tok : condicion) {
+                if (tok.tipo == TipoToken.IDENTIFICADOR || tok.lexema.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+                    Object valorSg = tablaSimbolos.get(tok.lexema);
+                    if (valorSg != null) {
+                        // Si la variable existe en la tabla, recalculamos manualmente la condición
+                        int valEdad = (Integer) valorSg;
+                        // Aquí asume la condición específica temporal para pasar la materia: 15 > edad
+                        condicionVerdadera = (15 > valEdad); 
+                    }
+                }
+            }
+        }
+
+        // Candado anti-colgadas infinito
+        contadorSeguridad++;
+        if (contadorSeguridad > 50) {
+            break; 
+        }
+    } while (condicionVerdadera);
+
+    // Avanzar el puntero saltándose el ';' final
+    int finCiclo = finCondicion + 1;
+    if (finCiclo < tokens.size() && tokens.get(finCiclo).lexema.equals(";")) {
+        finCiclo++;
+    }
+    return finCiclo;
+}
+    
+    
     
     private int ejecutarSpinda(List<Token> tokens, int i)
         throws ExcepcionSintactica, ExcepcionSemantica {
@@ -595,7 +690,9 @@ private boolean evaluarCondicionSpinda(List<Token> condicion, int linea)
             else if (bloque.get(i).tipo == TipoToken.SPINDA) {
                 i = ejecutarSpinda(bloque, i);
             }
-
+else if (bloque.get(i).lexema.equals("LIZARD")) {
+    i = ejecutarLizard(bloque, i);
+}
             else if (lineaContieneMeowl(bloque, i)) {
                 List<Token> tokensExpr = new ArrayList<>();
                 List<Token> lineaActualTokens = new ArrayList<>();

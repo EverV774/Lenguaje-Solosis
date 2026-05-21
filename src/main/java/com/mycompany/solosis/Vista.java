@@ -243,7 +243,17 @@ public class Vista extends javax.swing.JFrame {
             case sym.DIV: return "OPERADOR_DIV (/)";
             case sym.ID: return "IDENTIFICADOR (NOMBRE)";
             case sym.EOF: return "FIN_DE_ARCHIVO";
+            
+            case sym.LIZARD: return "CICLO_DO (LIZARD)";
+            case sym.PURPLE_LIZARD: return "CONDICION_WHILE (purple_lizard)";
+            case sym.PARENTESIS_A: return "PARENTESIS_APERTURA";
+            case sym.PARENTESIS_C: return "PARENTESIS_CIERRE";
+            case sym.LLAVE_A: return "LLAVE_APERTURA";
+            case sym.LLAVE_C: return "LLAVE_CIERRE";
+            
+           
             default: return "TOKEN_OTRO (" + id + ")";
+            
         }
     }
 

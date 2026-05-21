@@ -1,4 +1,3 @@
-
 import java_cup.runtime.*;
 import java.util.*;
 
@@ -12,29 +11,48 @@ parser code {:
 
 /* TERMINALES */
 terminal GABITE, FALINK, ESPEON;
-terminal SUMA, RESTA, MULT, DIV;
-terminal ASIGNACION;
+terminal SUMA, RESTA, MULT, DIV, CONCAT;
+terminal ASIGNACION, PUNTO_COMA;
 terminal Integer ENTERO;
 terminal String ID, STRING;
+
+terminal LIZARD, PURPLE_LIZARD;
+terminal PARENTESIS_A, PARENTESIS_C;
+terminal LLAVE_A, LLAVE_C;
+terminal MENOR, MAYOR, IGUAL;
 
 /* NO TERMINALES */
 non terminal Object programa;
 non terminal Object expresion;
+non terminal Object condicion;
+non terminal Object bloque;
+non terminal Object LIZARD; // Tu ciclo directo
 
 /* PRECEDENCIA */
 precedence left SUMA, RESTA;
 precedence left MULT, DIV;
+precedence left CONCAT;
 
 /* GRAMÁTICA */
-programa ::= expresion {: System.out.println("Resultado correcto"); :};
+programa ::= expresion {: System.out.println("Resultado correcto"); :}
+           | LIZARD    {: System.out.println("Ciclo LIZARD correcto"); :};
+
+/* REGLA DIRECTA PARA TU LIZARD (do-while) */
+LIZARD ::= LIZARD LLAVE_A bloque LLAVE_C PURPLE_LIZARD PARENTESIS_A condicion PARENTESIS_C PUNTO_COMA ;
+
+bloque ::= expresion PUNTO_COMA
+         | /* vacío */ ;
+
+condicion ::= expresion MAYOR expresion
+            | expresion MENOR expresion
+            | expresion IGUAL expresion;
 
 expresion ::=
-      ENTERO:e1 SUMA ENTERO:e2
-        {: System.out.println(e1 + " + " + e2 + " = " + (e1 + e2)); :}
-    | ENTERO:e1 RESTA ENTERO:e2
-        {: System.out.println(e1 + " - " + e2 + " = " + (e1 - e2)); :}
-    | ENTERO:e1 MULT ENTERO:e2
-        {: System.out.println(e1 + " * " + e2 + " = " + (e1 * e2)); :}
-    | ENTERO:e1 DIV ENTERO:e2
-        {: System.out.println(e1 + " / " + e2 + " = " + (e1 / e2)); :}
+      ENTERO:e1 SUMA ENTERO:e2   {: System.out.println(e1 + " + " + e2 + " = " + (e1 + e2)); :}
+    | ENTERO:e1 RESTA ENTERO:e2  {: System.out.println(e1 + " - " + e2 + " = " + (e1 - e2)); :}
+    | ENTERO:e1 MULT ENTERO:e2   {: System.out.println(e1 + " * " + e2 + " = " + (e1 * e2)); :}
+    | ENTERO:e1 DIV ENTERO:e2    {: System.out.println(e1 + " / " + e2 + " = " + (e1 / e2)); :}
+    | ENTERO:e                   {: RESULT = e; :}
+    | ID:id                      {: RESULT = id; :}
+    | STRING:s                   {: RESULT = s; :}
 ;

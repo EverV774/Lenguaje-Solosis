@@ -40,6 +40,16 @@ STRING  = \"([^\"\\]|\\.)*\"
 "falink"              { return symbol(sym.FALINK); }
 "espeon"              { return symbol(sym.ESPEON); }
 
+"LIZARD"              { return symbol(sym.LIZARD); }
+"purple_lizard"       { return symbol(sym.PURPLE_LIZARD); }
+"("                   { return symbol(sym.PARENTESIS_A); }
+")"                   { return symbol(sym.PARENTESIS_C); }
+"{"                   { return symbol(sym.LLAVE_A); }
+"}"                   { return symbol(sym.LLAVE_C); }
+"<"                   { return symbol(sym.MENOR); }
+">"                   { return symbol(sym.MAYOR); }
+"=="                  { return symbol(sym.IGUAL); }
+
 /* --- Operadores aritméticos --- */
 "+"                   { return symbol(sym.SUMA);   }
 "-"                   { return symbol(sym.RESTA);  }

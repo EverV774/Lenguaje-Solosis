@@ -20,6 +20,16 @@ public class sym {
     public static final int STRING      = 12;
     public static final int DECIMAL     = 13;
     public static final int PUNTO_COMA  = 14;
+    
+    public static final int LIZARD = 50;
+  public static final int PURPLE_LIZARD = 51;
+  public static final int PARENTESIS_A = 52;
+  public static final int PARENTESIS_C = 53;
+  public static final int LLAVE_A = 54;
+  public static final int LLAVE_C = 55;
+  public static final int MENOR = 56;
+  public static final int MAYOR = 57;
+  public static final int IGUAL = 58;
 
     public static final String[] terminalNames = new String[] {
         "EOF", "error", "GABITE", "FALINK", "ESPEON",

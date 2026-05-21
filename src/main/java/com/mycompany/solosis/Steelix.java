@@ -29,6 +29,12 @@ public class Steelix {
             return null;
         }
 
+        
+        if (lineaTrim.startsWith("LIZARD") || lineaTrim.contains("purple_lizard") || lineaTrim.startsWith("}")) {
+            return null; // Saltarse la validación estricta de línea individual para tu ciclo
+        }
+        
+        
         // 2. Detectar estructuras especiales de spinda
         boolean esSpinda = lineaTrim.matches("^spinda\\s*\\(.+\\)\\s*\\{$");
         boolean esCierreBloque = lineaTrim.matches("^\\}$");
@@ -69,6 +75,10 @@ public class Steelix {
         if (tokens.isEmpty()) {
             return null;
         }
+        
+        
+        
+        
 
         // ─────────────────────────────────────────────
         // CASO 1: Impresión flexible: <expresión> meowl ;
