@@ -23,12 +23,16 @@ public class AnalizadorManual {
     //  Tipos de token
     // ------------------------------------------------------------------ //
     public enum TipoToken {
-        GABITE, ESPEON, FALINK, MEOWL,
-        IDENTIFICADOR, ENTERO, DECIMAL, STRING,
-        ASIGNACION, PUNTO_COMA,
-        OPERADOR_SUMA, OPERADOR_RESTA, OPERADOR_MULT, OPERADOR_DIV,
-        COMENTARIO, DESCONOCIDO
-    }
+    GABITE, ESPEON, FALINK, MEOWL, SPINDA,
+    IDENTIFICADOR, ENTERO, DECIMAL, STRING,
+    ASIGNACION, PUNTO_COMA,
+    OPERADOR_SUMA, OPERADOR_RESTA, OPERADOR_MULT, OPERADOR_DIV,
+    PARENTESIS_IZQ, PARENTESIS_DER,
+    LLAVE_IZQ, LLAVE_DER,
+    MAYOR, MENOR, MAYOR_IGUAL, MENOR_IGUAL,
+    IGUAL_IGUAL, DIFERENTE,
+    COMENTARIO, DESCONOCIDO
+}
 
     // ------------------------------------------------------------------ //
     //  Clase Token: ahora incluye lexema y patron
@@ -69,23 +73,35 @@ public class AnalizadorManual {
     //  Definición de patrones nombrados (orden = precedencia)
     // ------------------------------------------------------------------ //
     private static final String[][] PATRONES = {
-        // Palabras reservadas: usan lookahead negativo (?![a-zA-Z0-9_])
-        // para distinguirse de identificadores pegados (gabitea != gabite + a)
-        { "PALABRA_RESERVADA_GABITE",  "gabite(?![a-zA-Z0-9_])"         },
-        { "PALABRA_RESERVADA_ESPEON",  "espeon(?![a-zA-Z0-9_])"         },
-        { "PALABRA_RESERVADA_FALINK",  "falink(?![a-zA-Z0-9_])"         },
-        { "PALABRA_RESERVADA_MEOWL",   "meowl(?![a-zA-Z0-9_])"          },
-        // CORRECCIÓN: Ahora el Regex acepta tanto "..." como '...'
-        { "LITERAL_STRING",            "\"[^\"]*\"|'[^']*'"             },
-        { "LITERAL_DECIMAL",           "\\d+\\.\\d+"                    },
-        { "LITERAL_ENTERO",            "\\d+(?![a-zA-Z_])"              },
-        { "IDENTIFICADOR",             "[a-zA-Z_][a-zA-Z0-9_]*"         },
-        { "ASIGNACION",                "\\?"                            },
-        { "OPERADOR_SUMA",             "\\+"                            },
-        { "OPERADOR_RESTA",            "-"                              },
-        { "OPERADOR_MULT",             "\\*"                            },
-        { "OPERADOR_DIV",              "/"                              },
-        { "PUNTO_COMA",                ";"                              },
+    { "PALABRA_RESERVADA_GABITE",  "gabite(?![a-zA-Z0-9_])"         },
+    { "PALABRA_RESERVADA_ESPEON",  "espeon(?![a-zA-Z0-9_])"         },
+    { "PALABRA_RESERVADA_FALINK",  "falink(?![a-zA-Z0-9_])"         },
+    { "PALABRA_RESERVADA_MEOWL",   "meowl(?![a-zA-Z0-9_])"          },
+    { "PALABRA_RESERVADA_SPINDA",  "spinda(?![a-zA-Z0-9_])"         },
+
+    { "LITERAL_STRING",            "\"[^\"]*\"|'[^']*'"             },
+    { "LITERAL_DECIMAL",           "\\d+\\.\\d+"                    },
+    { "LITERAL_ENTERO",            "\\d+(?![a-zA-Z_])"              },
+
+    // Comparadores compuestos primero
+    { "MAYOR_IGUAL",               ">="                             },
+    { "MENOR_IGUAL",               "<="                             },
+    { "IGUAL_IGUAL",               "=="                             },
+    { "DIFERENTE",                 "!="                             },
+
+    { "IDENTIFICADOR",             "[a-zA-Z_][a-zA-Z0-9_]*"         },
+    { "ASIGNACION",                "\\?"                            },
+    { "OPERADOR_SUMA",             "\\+"                            },
+    { "OPERADOR_RESTA",            "-"                              },
+    { "OPERADOR_MULT",             "\\*"                            },
+    { "OPERADOR_DIV",              "/"                              },
+    { "PARENTESIS_IZQ",            "\\("                            },
+    { "PARENTESIS_DER",            "\\)"                            },
+    { "LLAVE_IZQ",                 "\\{"                            },
+    { "LLAVE_DER",                 "\\}"                            },
+    { "MAYOR",                     ">"                              },
+    { "MENOR",                     "<"                              },
+    { "PUNTO_COMA",                ";"                              },
     };
 
     private static final Pattern PATRON_TOKENS;
@@ -93,7 +109,7 @@ public class AnalizadorManual {
     /** Detecta cualquier carácter que no sea parte del alfabeto válido de Solosis */
     // CORRECCIÓN: Agregada la comilla simple (\') al grupo de caracteres permitidos
     private static final Pattern PATRON_INVALIDO =
-            Pattern.compile("[^\\w\\s\"'\\?\\+\\-\\*/;#\\.]");
+        Pattern.compile("[^\\w\\s\"'\\?\\+\\-\\*/;#\\.\\(\\)\\{\\}<>!=]");
 
     static {
         StringBuilder sb = new StringBuilder();
@@ -159,16 +175,17 @@ public class AnalizadorManual {
     private String resolverPatron(String lexema) {
         // Resolución directa por valor (compatible con patrones lookahead)
         switch (lexema) {
-            case "gabite": return "PALABRA_RESERVADA_GABITE";
-            case "espeon": return "PALABRA_RESERVADA_ESPEON";
-            case "falink": return "PALABRA_RESERVADA_FALINK";
-            case "meowl":  return "PALABRA_RESERVADA_MEOWL";
-            case "?":      return "ASIGNACION";
-            case "+":      return "OPERADOR_SUMA";
-            case "-":      return "OPERADOR_RESTA";
-            case "*":      return "OPERADOR_MULT";
-            case "/":      return "OPERADOR_DIV";
-            case ";":      return "PUNTO_COMA";
+            case "spinda": return "PALABRA_RESERVADA_SPINDA";
+            case "(":      return "PARENTESIS_IZQ";
+            case ")":      return "PARENTESIS_DER";
+            case "{":      return "LLAVE_IZQ";
+            case "}":      return "LLAVE_DER";
+            case ">":      return "MAYOR";
+            case "<":      return "MENOR";
+            case ">=":     return "MAYOR_IGUAL";
+            case "<=":     return "MENOR_IGUAL";
+            case "==":     return "IGUAL_IGUAL";
+            case "!=":     return "DIFERENTE";
         }
         // CORRECCIÓN: Ahora identifica el nombre del patrón si empieza con comilla simple
         if (lexema.startsWith("\"") || lexema.startsWith("'")) return "LITERAL_STRING";
@@ -179,23 +196,36 @@ public class AnalizadorManual {
     }
 
     private TipoToken resolverTipo(String lexema) {
-        switch (lexema) {
-            case "gabite": return TipoToken.GABITE;
-            case "espeon": return TipoToken.ESPEON;
-            case "falink": return TipoToken.FALINK;
-            case "meowl":  return TipoToken.MEOWL;
-            case "?":      return TipoToken.ASIGNACION;
-            case "+":      return TipoToken.OPERADOR_SUMA;
-            case "-":      return TipoToken.OPERADOR_RESTA;
-            case "*":      return TipoToken.OPERADOR_MULT;
-            case "/":      return TipoToken.OPERADOR_DIV;
-            case ";":      return TipoToken.PUNTO_COMA;
-            default:
-                // Acepta que empiece con comillas dobles O comillas simples
-                if (lexema.startsWith("\"") || lexema.startsWith("'")) return TipoToken.STRING;
-                if (lexema.matches("\\d+\\.\\d+"))     return TipoToken.DECIMAL;
-                if (lexema.matches("\\d+"))            return TipoToken.ENTERO;
-                return TipoToken.IDENTIFICADOR;
-        }
+    switch (lexema) {
+        case "gabite": return TipoToken.GABITE;
+        case "espeon": return TipoToken.ESPEON;
+        case "falink": return TipoToken.FALINK;
+        case "meowl":  return TipoToken.MEOWL;
+        case "spinda": return TipoToken.SPINDA;
+
+        case "?":      return TipoToken.ASIGNACION;
+        case "+":      return TipoToken.OPERADOR_SUMA;
+        case "-":      return TipoToken.OPERADOR_RESTA;
+        case "*":      return TipoToken.OPERADOR_MULT;
+        case "/":      return TipoToken.OPERADOR_DIV;
+        case ";":      return TipoToken.PUNTO_COMA;
+
+        case "(":      return TipoToken.PARENTESIS_IZQ;
+        case ")":      return TipoToken.PARENTESIS_DER;
+        case "{":      return TipoToken.LLAVE_IZQ;
+        case "}":      return TipoToken.LLAVE_DER;
+        case ">":      return TipoToken.MAYOR;
+        case "<":      return TipoToken.MENOR;
+        case ">=":     return TipoToken.MAYOR_IGUAL;
+        case "<=":     return TipoToken.MENOR_IGUAL;
+        case "==":     return TipoToken.IGUAL_IGUAL;
+        case "!=":     return TipoToken.DIFERENTE;
+
+        default:
+            if (lexema.startsWith("\"") || lexema.startsWith("'")) return TipoToken.STRING;
+            if (lexema.matches("\\d+\\.\\d+")) return TipoToken.DECIMAL;
+            if (lexema.matches("\\d+")) return TipoToken.ENTERO;
+            return TipoToken.IDENTIFICADOR;
     }
+}
 }

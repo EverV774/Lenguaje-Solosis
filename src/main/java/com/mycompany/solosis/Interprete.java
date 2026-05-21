@@ -135,6 +135,9 @@ public class Interprete {
 
                     i = j + 1;
                 }
+                else if (tokens.get(i).tipo == TipoToken.SPINDA) {
+                    i = ejecutarSpinda(tokens, i);
+                }
 
                 // ─────────────────────────────────────────────
                 // CASO 3: SINTAXIS MEOWL FLEXIBLE
@@ -178,16 +181,19 @@ public class Interprete {
                     i++;
                 }
 
-            } catch (ExcepcionSemantica e) {
-                // ¡AQUÍ ESTÁ EL TRUCO! En lugar de romper el programa, guardamos el error
+            } catch (ExcepcionSolosis e) {
                 erroresAcumulados.add("Error Línea " + lineaActual + ": " + e.getMessage());
-                
-                // Avanzamos el puntero 'i' hasta encontrar el próximo ';' para saltarnos esta línea rota
-                while (i < tokens.size() && tokens.get(i).tipo != TipoToken.PUNTO_COMA) {
-                    i++;
+
+            while (i < tokens.size()
+                    && tokens.get(i).tipo != TipoToken.PUNTO_COMA
+                    && tokens.get(i).tipo != TipoToken.LLAVE_DER) {
+                i++;
                 }
-                i++; // pasamos el punto y coma
-            }
+
+    if (i < tokens.size()) {
+        i++;
+    }
+}
         }
 
         // ── REPORTE FINAL DE RESULTADOS O ERRORES ──
@@ -329,11 +335,18 @@ public class Interprete {
                 case ESPEON:
                 case FALINK:
                 case MEOWL:       palabras.append(tok.lexema).append(" "); break;
+                case SPINDA:      palabras.append(tok.lexema).append(" "); break;
                 case OPERADOR_SUMA:
                 case OPERADOR_RESTA:
                 case OPERADOR_MULT:
                 case OPERADOR_DIV:
                 case ASIGNACION:  operadores.append(tok.lexema).append(" "); break;
+                case MAYOR:
+                case MENOR:
+                case MAYOR_IGUAL:
+                case MENOR_IGUAL:
+                case IGUAL_IGUAL:
+                case DIFERENTE:   operadores.append(tok.lexema).append(" "); break;
                 case ENTERO:
                 case DECIMAL:
                 case STRING:      constantes.append(tok.lexema).append(" "); break;
@@ -349,6 +362,294 @@ public class Interprete {
         logEjecucion.append("signo de cierre: ").append(cierres.toString().trim()).append("\n");
         logEjecucion.append("─────────────────────────────────────────────\n");
     }
+    
+    private int ejecutarSpinda(List<Token> tokens, int i)
+        throws ExcepcionSintactica, ExcepcionSemantica {
 
+    int linea = tokens.get(i).linea;
+
+    if (i + 1 >= tokens.size() || tokens.get(i + 1).tipo != TipoToken.PARENTESIS_IZQ) {
+        throw new ExcepcionSintactica("Falta '(' después de spinda.", linea);
+    }
+
+    int inicioCondicion = i + 2;
+    int finCondicion = buscarCierreSimple(tokens, inicioCondicion, TipoToken.PARENTESIS_DER, linea,
+            "Falta ')' para cerrar la condición de spinda.");
+
+    List<Token> condicion = new ArrayList<>(tokens.subList(inicioCondicion, finCondicion));
+
+    if (condicion.isEmpty()) {
+        throw new ExcepcionSintactica("La condición de spinda está vacía.", linea);
+    }
+
+    if (finCondicion + 1 >= tokens.size() || tokens.get(finCondicion + 1).tipo != TipoToken.LLAVE_IZQ) {
+        throw new ExcepcionSintactica("Falta '{' después de la condición de spinda.", linea);
+    }
+
+    int inicioBloque = finCondicion + 2;
+    int finBloque = buscarLlaveCierre(tokens, inicioBloque, linea);
+
+    boolean condicionVerdadera = evaluarCondicionSpinda(condicion, linea);
+
+    if (condicionVerdadera) {
+        List<Token> bloque = new ArrayList<>(tokens.subList(inicioBloque, finBloque));
+        ejecutarBloqueSpinda(bloque);
+    } else {
+        logEjecucion.append("spinda: condición falsa, bloque omitido.\n");
+        logEjecucion.append("─────────────────────────────────────────────\n");
+    }
+
+    return finBloque + 1;
+}
+
+private int buscarCierreSimple(List<Token> tokens, int inicio, TipoToken cierre, int linea, String mensajeError)
+        throws ExcepcionSintactica {
+
+    int j = inicio;
+
+    while (j < tokens.size()) {
+        if (tokens.get(j).tipo == cierre) {
+            return j;
+        }
+        j++;
+    }
+
+    throw new ExcepcionSintactica(mensajeError, linea);
+}
+
+private int buscarLlaveCierre(List<Token> tokens, int inicio, int linea)
+        throws ExcepcionSintactica {
+
+    int nivel = 1;
+    int j = inicio;
+
+    while (j < tokens.size()) {
+        if (tokens.get(j).tipo == TipoToken.LLAVE_IZQ) {
+            nivel++;
+        } else if (tokens.get(j).tipo == TipoToken.LLAVE_DER) {
+            nivel--;
+            if (nivel == 0) {
+                return j;
+            }
+        }
+        j++;
+    }
+
+    throw new ExcepcionSintactica("Falta '}' para cerrar el bloque de spinda.", linea);
+}
+
+private boolean evaluarCondicionSpinda(List<Token> condicion, int linea)
+        throws ExcepcionSemantica, ExcepcionSintactica {
+
+    if (condicion.size() != 3) {
+        throw new ExcepcionSintactica(
+                "La condición de spinda debe tener la forma: valor comparador valor. Ejemplo: spinda (edad >= 18)",
+                linea
+        );
+    }
+
+    Token izquierdaToken = condicion.get(0);
+    Token operadorToken = condicion.get(1);
+    Token derechaToken = condicion.get(2);
+
+    Operacion izquierda = buscarOConvertir(izquierdaToken.lexema, linea);
+    Operacion derecha = buscarOConvertir(derechaToken.lexema, linea);
+
+    Object valorIzq = izquierda.getValor();
+    Object valorDer = derecha.getValor();
+
+    TipoToken operador = operadorToken.tipo;
+
+    boolean izqNumero = valorIzq instanceof Number;
+    boolean derNumero = valorDer instanceof Number;
+
+    if (izqNumero && derNumero) {
+        double a = Double.parseDouble(valorIzq.toString());
+        double b = Double.parseDouble(valorDer.toString());
+
+        switch (operador) {
+            case MAYOR:       return a > b;
+            case MENOR:       return a < b;
+            case MAYOR_IGUAL: return a >= b;
+            case MENOR_IGUAL: return a <= b;
+            case IGUAL_IGUAL: return a == b;
+            case DIFERENTE:   return a != b;
+            default:
+                throw new ExcepcionSemantica("Operador inválido en condición spinda: " + operadorToken.lexema, linea);
+        }
+    }
+
+    if (valorIzq instanceof String && valorDer instanceof String) {
+        String a = valorIzq.toString();
+        String b = valorDer.toString();
+
+        switch (operador) {
+            case IGUAL_IGUAL: return a.equals(b);
+            case DIFERENTE:   return !a.equals(b);
+            default:
+                throw new ExcepcionSemantica("Los textos falink solo pueden compararse con == o !=.", linea);
+        }
+    }
+
+    throw new ExcepcionSemantica("No se pueden comparar valores de tipos incompatibles en spinda.", linea);
+}
+
+    private void ejecutarBloqueSpinda(List<Token> bloque) {
+        int i = 0;
+
+        while (i < bloque.size()) {
+            Token t = bloque.get(i);
+            int lineaActual = t.linea;
+
+        try {
+            if (i + 1 < bloque.size() &&
+                bloque.get(i).tipo == TipoToken.IDENTIFICADOR &&
+                (bloque.get(i + 1).tipo == TipoToken.GABITE ||
+                 bloque.get(i + 1).tipo == TipoToken.ESPEON ||
+                 bloque.get(i + 1).tipo == TipoToken.FALINK)) {
+
+                Token tokId = bloque.get(i);
+                Token tipoDato = bloque.get(i + 1);
+                String nombreVar = tokId.lexema;
+
+                if (tiposDeclarados.containsKey(nombreVar)) {
+                    throw new ExcepcionSemantica("La variable '" + nombreVar + "' ya fue declarada", lineaActual);
+                }
+
+                tiposDeclarados.put(nombreVar, tipoDato.tipo);
+
+                List<Token> lineaActualTokens = new ArrayList<>();
+                lineaActualTokens.add(bloque.get(i));
+                lineaActualTokens.add(bloque.get(i + 1));
+
+                if (i + 2 < bloque.size() && bloque.get(i + 2).tipo == TipoToken.PUNTO_COMA) {
+                    lineaActualTokens.add(bloque.get(i + 2));
+                    tablaSimbolos.put(nombreVar, null);
+                    generarReporteTokens(lineaActualTokens);
+                    i += 3;
+                    continue;
+                }
+
+                lineaActualTokens.add(bloque.get(i + 2));
+
+                List<Token> tokensExpr = new ArrayList<>();
+                int j = i + 3;
+
+                while (j < bloque.size() && bloque.get(j).tipo != TipoToken.PUNTO_COMA) {
+                    tokensExpr.add(bloque.get(j));
+                    lineaActualTokens.add(bloque.get(j));
+                    j++;
+                }
+
+                if (j < bloque.size() && bloque.get(j).tipo == TipoToken.PUNTO_COMA) {
+                    lineaActualTokens.add(bloque.get(j));
+                }
+
+                Operacion resultado = evaluarExpresion(tokensExpr, lineaActual);
+                validarCompatibilidadTipo(tipoDato.tipo, resultado, lineaActual);
+
+                tablaSimbolos.put(nombreVar, resultado);
+                generarReporteTokens(lineaActualTokens);
+
+                i = j + 1;
+            }
+
+            else if (i + 1 < bloque.size() &&
+                     bloque.get(i).tipo == TipoToken.IDENTIFICADOR &&
+                     bloque.get(i + 1).tipo == TipoToken.ASIGNACION) {
+
+                Token tokId = bloque.get(i);
+                String nombreVar = tokId.lexema;
+
+                if (!tiposDeclarados.containsKey(nombreVar)) {
+                    throw new ExcepcionSemantica("La variable '" + nombreVar + "' no ha sido declarada.", lineaActual);
+                }
+
+                List<Token> lineaActualTokens = new ArrayList<>();
+                lineaActualTokens.add(bloque.get(i));
+                lineaActualTokens.add(bloque.get(i + 1));
+
+                List<Token> tokensExpr = new ArrayList<>();
+                int j = i + 2;
+
+                while (j < bloque.size() && bloque.get(j).tipo != TipoToken.PUNTO_COMA) {
+                    tokensExpr.add(bloque.get(j));
+                    lineaActualTokens.add(bloque.get(j));
+                    j++;
+                }
+
+                if (j < bloque.size() && bloque.get(j).tipo == TipoToken.PUNTO_COMA) {
+                    lineaActualTokens.add(bloque.get(j));
+                }
+
+                Operacion resultado = evaluarExpresion(tokensExpr, lineaActual);
+                TipoToken tipoOriginal = tiposDeclarados.get(nombreVar);
+                validarCompatibilidadTipo(tipoOriginal, resultado, lineaActual);
+
+                tablaSimbolos.put(nombreVar, resultado);
+                generarReporteTokens(lineaActualTokens);
+
+                i = j + 1;
+            }
+
+            else if (bloque.get(i).tipo == TipoToken.SPINDA) {
+                i = ejecutarSpinda(bloque, i);
+            }
+
+            else if (lineaContieneMeowl(bloque, i)) {
+                List<Token> tokensExpr = new ArrayList<>();
+                List<Token> lineaActualTokens = new ArrayList<>();
+
+                int j = i;
+
+                while (j < bloque.size() && bloque.get(j).tipo != TipoToken.MEOWL) {
+                    tokensExpr.add(bloque.get(j));
+                    lineaActualTokens.add(bloque.get(j));
+                    j++;
+                }
+
+                Token tokMeowl = bloque.get(j);
+                lineaActualTokens.add(tokMeowl);
+
+                j++;
+
+                if (j < bloque.size() && bloque.get(j).tipo == TipoToken.PUNTO_COMA) {
+                    lineaActualTokens.add(bloque.get(j));
+                }
+
+                Operacion resultado = evaluarExpresion(tokensExpr, lineaActual);
+
+                if (resultado == null) {
+                    throw new ExcepcionSemantica("Error: No hay nada que imprimir antes de 'meowl'.", lineaActual);
+                }
+
+                generarReporteTokens(lineaActualTokens);
+
+                logEjecucion.append("comando de salida: ").append(tokMeowl.lexema).append("\n")
+                            .append("lo que sale: ").append(resultado.getValor()).append("\n");
+                logEjecucion.append("─────────────────────────────────────────────\n");
+
+                i = j + 1;
+            }
+
+            else {
+                i++;
+            }
+
+        } catch (ExcepcionSolosis e) {
+            erroresAcumulados.add("Error Línea " + lineaActual + ": " + e.getMessage());
+
+            while (i < bloque.size()
+                    && bloque.get(i).tipo != TipoToken.PUNTO_COMA
+                    && bloque.get(i).tipo != TipoToken.LLAVE_DER) {
+                i++;
+            }
+
+            if (i < bloque.size()) {
+                i++;
+            }
+        }
+        }
+    }
     public String obtenerLogEjecucion() { return logEjecucion.toString(); }
 }
