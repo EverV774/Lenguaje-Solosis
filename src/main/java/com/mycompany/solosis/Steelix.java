@@ -24,8 +24,24 @@ public class Steelix {
         if (linea.isEmpty()) return null;
 
         // 2. Toda instrucción debe terminar en ';'
-        if (!linea.endsWith(";")) {
-            throw new ExcepcionSintactica("Falta el signo de cierre ';' al final", numLinea);
+        String lineaTrim = linea.trim();
+
+        if (!lineaTrim.isEmpty()) {
+
+            // Permitir apertura de bloque spinda
+        if (lineaTrim.startsWith("spinda") && lineaTrim.endsWith("{")) {
+            // No hacer nada, esta línea es válida
+        }
+
+            // Permitir cierre de bloque
+        else if (lineaTrim.equals("}")) {
+            // No hacer nada, esta línea es válida
+        }
+
+            // Las demás instrucciones sí deben terminar con ;
+        else if (!lineaTrim.endsWith(";")) {
+            throw new ExcepcionSintactica("Falta el signo de cierre ';' al final", 0);
+            }
         }
 
         // 3. No se permite '=' como asignación en tu lenguaje
