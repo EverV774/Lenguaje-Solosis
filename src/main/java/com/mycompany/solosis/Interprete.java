@@ -180,7 +180,7 @@ else if (tokens.get(i).lexema.equals("LIZARD")) {
                     generarReporteTokens(lineaActualTokens);
 
                     logEjecucion.append("comando de salida: ").append(tokMeowl.lexema).append("\n")
-                                .append("lo que sale: ").append(resultado.getValor()).append("\n");
+                                .append("Salida: ").append(resultado.getValor()).append("\n");
                     logEjecucion.append("─────────────────────────────────────────────\n");
 
                     i = j + 1;
@@ -208,7 +208,7 @@ else if (tokens.get(i).lexema.equals("LIZARD")) {
         // ── REPORTE FINAL DE RESULTADOS O ERRORES ──
         if (!erroresAcumulados.isEmpty()) {
             logEjecucion.setLength(0); // Limpiamos éxitos parciales
-            logEjecucion.append("❌ SE ENCONTRARON ERRORES SEMÁNTICOS EN EL PROGRAMA:\n");
+            logEjecucion.append("SE ENCONTRARON ERRORES SEMÁNTICOS EN EL PROGRAMA:\n");
             logEjecucion.append("───────────────────────────────────────────────────\n");
             for (String error : erroresAcumulados) {
                 logEjecucion.append(error).append("\n");

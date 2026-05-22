@@ -40,29 +40,51 @@ public class VentanaTokens extends javax.swing.JDialog {
  
     /** Llena la tabla con los datos de los tokens incluyendo lexema y patrón. */
     public void llenarTabla(java.util.List<Object[]> datos) {
+
         javax.swing.table.DefaultTableModel modelo =
                 (javax.swing.table.DefaultTableModel) tblTokens.getModel();
         modelo.setRowCount(0);
- 
-        // ← SE AGREGÓ "?" Y "meowl" COMO PALABRAS RESERVADAS
-        java.util.Set<String> reservadas = new java.util.HashSet<>(java.util.Arrays.asList(
-            "gabite", "espeon", "falink", "meowl", "?"
+
+        java.util.Set<String> reservadas =
+                new java.util.HashSet<>(java.util.Arrays.asList(
+            "gabite",
+            "espeon",
+            "falink",
+            "meowl",
+            "spinda",
+            "LIZARD",
+            "purple_lizard"
+
         ));
- 
-        int contador = 1;  // Bug 1 fix: contador incremental para No. Lista
- 
+
+        int contador = 1;
+        
         for (Object[] fila : datos) {
-            String tipo    = fila[0] != null ? fila[0].toString() : "";
-            String lexema  = fila[1] != null ? fila[1].toString() : "";
-            String patron  = fila[2] != null ? fila[2].toString() : "";
-            Object linea   = fila[3];
+            String tipo =
+                    fila[0] != null ? fila[0].toString() : "";
+            String lexema =
+                    fila[1] != null ? fila[1].toString() : "";
+            String patron =
+                    fila[2] != null ? fila[2].toString() : "";
+            Object linea = fila[3];
             Object columna = fila[4];
- 
-            String esReservada = reservadas.contains(lexema.toLowerCase()) ? "Sí" : "No";
-            String patronLegible = resolverPatronLegible(patron);  // Bug 2 fix: patrón legible
- 
-            modelo.addRow(new Object[]{ contador, tipo, lexema, patronLegible, linea, columna, esReservada });
-            contador++;  // Bug 1 fix: incrementar después de cada fila
+            String patronLegible =
+                    resolverPatronLegible(patron);
+            String esReservada =
+                    reservadas.contains(lexema)
+                    ? "Sí"
+                    : "No";
+
+            modelo.addRow(new Object[] {
+                contador,
+                tipo,
+                lexema,
+                patronLegible,
+                linea,
+                columna,
+                esReservada
+            });
+            contador++;
         }
     }
 
@@ -84,17 +106,17 @@ public class VentanaTokens extends javax.swing.JDialog {
 
         tblTokens.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null}
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null}
             },
             new String [] {
-                "No. Lista", "Tipo", "Valor", "Linea", "Colunma", "Palabra reservada"
+                "No. Lista", "Tipo", "Valor", "Patrón", "Linea", "Columna", "Palabra reservada"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
+                false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -120,10 +142,11 @@ public class VentanaTokens extends javax.swing.JDialog {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(ScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 679, javax.swing.GroupLayout.PREFERRED_SIZE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(295, 295, 295)
-                .addComponent(jButton1))
+            .addComponent(ScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 980, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton1)
+                .addGap(445, 445, 445))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

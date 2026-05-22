@@ -198,34 +198,114 @@ public class Vista extends javax.swing.JFrame {
             return;
         }
  
-        // Fase 2: Análisis Léxico y Ejecución Dinámica con acumulación de errores de tipo
+        // Fase 2: Análisis Léxico + Gramática + Ejecución
         try {
-            AnalizadorManual lexer = new AnalizadorManual();
-            List<AnalizadorManual.Token> tokens = lexer.escanear(codigo);
- 
-            Interprete ejecutor = new Interprete();
+            // =========================================
+            // ANALIZADOR LÉXICO
+            // =========================================
+            AnalizadorManual lexer =
+                    new AnalizadorManual();
+
+            List<AnalizadorManual.Token> tokens =
+                    lexer.escanear(codigo);
+
+            // =========================================
+            // EJECUCIÓN
+            // =========================================
+            Interprete ejecutor =
+                    new Interprete();
+
             ejecutor.ejecutar(tokens);
- 
-            String resultadoLog = ejecutor.obtenerLogEjecucion();
-            
-            // Condición infalible: si el log contiene la cruz o la palabra reservada de fallo
-            if (resultadoLog.contains("ERRor") || resultadoLog.contains("ABORTADA")) {
-                txtSalida.setForeground(Color.RED); // ¡Pintar en ROJO pasional si falló algo semántico!
+
+            String resultadoLog =
+                    ejecutor.obtenerLogEjecucion();
+
+            // =========================================
+            // COLOR SEGÚN RESULTADO
+            // =========================================
+            if (resultadoLog.contains("ERRor")
+                    || resultadoLog.contains("ERROR")
+                    || resultadoLog.contains("ABORTADA")) {
+
+                txtSalida.setForeground(Color.RED);
+
             } else {
-                txtSalida.setForeground(new Color(0, 150, 0)); // VERDE éxito si corrió limpio
+
+                txtSalida.setForeground(
+                        new Color(0, 255, 100)
+                );
             }
+            // =========================================
+            // MOSTRAR GRAMÁTICA EN TERMINAL
+            // =========================================
+            txtSalida.setForeground(new Color(0, 255, 100));
+
+            mostrarGramaticaEnTerminal(codigo);
+
+            txtSalida.append(
+                "\n========== ANÁLISIS LÉXICO ==========\n\n"
+            );
+
+
+            // =========================================
+            // MOSTRAR EJECUCIÓN
+            // =========================================
+            txtSalida.append(
+                "\n========== EJECUCIÓN ==========\n\n"
+            );
+
+            txtSalida.append(resultadoLog);
+
+            txtSalida.append(
+                "\n\n>>> FIN DEL PROGRAMA SOLOSIS <<<"
+            );
             
-            txtSalida.setText(resultadoLog);
- 
-        } catch (ExcepcionLexica e) {
+
+        }
+        // =========================================
+        // ERROR LÉXICO
+        // =========================================
+        catch (ExcepcionLexica e) {
+
             txtSalida.setForeground(Color.RED);
-            txtSalida.setText("Error Léxico: " + e.getMessage());
-        } catch (ExcepcionLimite e) {
+
+            txtSalida.append(
+                "\n❌ ERROR LÉXICO:\n"
+            );
+
+            txtSalida.append(
+                e.getMessage()
+            );
+        }
+        // =========================================
+        // ERROR DE LÍMITES
+        // =========================================
+        catch (ExcepcionLimite e) {
+
             txtSalida.setForeground(Color.RED);
-            txtSalida.setText("Error de Límites: " + e.getMessage());
-        } catch (Exception e) {
+
+            txtSalida.append(
+                "\n❌ ERROR DE LÍMITES:\n"
+            );
+
+            txtSalida.append(
+                e.getMessage()
+            );
+        }
+        // =========================================
+        // ERROR GENERAL
+        // =========================================
+        catch (Exception e) {
+
             txtSalida.setForeground(Color.RED);
-            txtSalida.setText("ERROR CRÍTICO DE SISTEMA: " + e.getMessage());
+
+            txtSalida.append(
+                "\n❌ ERROR CRÍTICO DEL SISTEMA:\n"
+            );
+
+            txtSalida.append(
+                e.getMessage()
+            );
         }
     }//GEN-LAST:event_btnAnalizarActionPerformed
     
@@ -256,7 +336,230 @@ public class Vista extends javax.swing.JFrame {
             
         }
     }
+    
+    private void mostrarGramaticaEnTerminal(String codigo) {
+        txtSalida.append(
+            "\n========== GRAMÁTICA SOLOSIS ==========\n\n"
+        );
+        
+        String[] lineas = codigo.split("\n");
 
+        for (int i = 0; i < lineas.length; i++) {
+
+            String linea = lineas[i].trim();
+
+            if (linea.isEmpty()) {
+                continue;
+            }
+
+            txtSalida.append(
+                "LÍNEA " + (i + 1) + "\n"
+            );
+
+            // =====================================
+            // IDENTIFICAR BREAK
+            // =====================================
+            String breakToken = "-";
+
+            if (linea.endsWith(";")) {
+                breakToken = ";";
+            }
+
+            if (linea.endsWith("{")) {
+                breakToken = "{";
+            }
+
+            if (linea.endsWith("}")) {
+                breakToken = "}";
+            }
+
+            // =====================================
+            // DECLARACIONES SOLOSIS
+            // x gabite ? 3;
+            // =====================================
+            if (linea.contains("?")
+                    && !linea.startsWith("spinda")) {
+
+                String limpia = linea
+                        .replace(";", "")
+                        .trim();
+
+                String[] partes =
+                        limpia.split("\\s+");
+
+                if (partes.length >= 4) {
+
+                    String identificador = partes[0];
+
+                    String tipoDato = partes[1];
+
+                    String expresion =
+                            limpia.substring(
+                                    limpia.indexOf("?") + 1
+                            ).trim();
+
+                    txtSalida.append(
+                        "<identificador> : "
+                        + identificador + "\n"
+                    );
+
+                    txtSalida.append(
+                        "<tipo de dato> : "
+                        + tipoDato + "\n"
+                    );
+
+                    txtSalida.append(
+                        "<asignación> : ?\n"
+                    );
+
+                    txtSalida.append(
+                        "<expresión> : "
+                        + expresion + "\n"
+                    );
+
+                    txtSalida.append(
+                        "<break> : "
+                        + breakToken + "\n"
+                    );
+                }
+            }
+
+            // =====================================
+            // SPINDA
+            // spinda(x>1){
+            // =====================================
+            else if (linea.startsWith("spinda")) {
+
+                txtSalida.append(
+                    "<bloque> : spinda\n"
+                );
+
+                if (linea.contains("(")
+                        && linea.contains(")")) {
+
+                    String condicion =
+                            linea.substring(
+                                    linea.indexOf("(") + 1,
+                                    linea.indexOf(")")
+                            );
+
+                    txtSalida.append(
+                        "<paréntesis> : (\n"
+                    );
+
+                    txtSalida.append(
+                        "<expresión> : "
+                        + condicion + "\n"
+                    );
+
+                    txtSalida.append(
+                        "<paréntesis> : )\n"
+                    );
+                }
+
+                txtSalida.append(
+                    "<break> : "
+                    + breakToken + "\n"
+                );
+            }
+
+            // =====================================
+            // LIZARD
+            // =====================================
+            else if (linea.startsWith("LIZARD")) {
+
+                txtSalida.append(
+                    "<bloque> : LIZARD\n"
+                );
+
+                txtSalida.append(
+                    "<break> : "
+                    + breakToken + "\n"
+                );
+            }
+
+            // =====================================
+            // PURPLE_LIZARD
+            // =====================================
+            else if (linea.startsWith("purple_lizard")) {
+
+                txtSalida.append(
+                    "<bloque> : purple_lizard\n"
+                );
+
+                if (linea.contains("(")
+                        && linea.contains(")")) {
+
+                    String condicion =
+                            linea.substring(
+                                    linea.indexOf("(") + 1,
+                                    linea.indexOf(")")
+                            );
+
+                    txtSalida.append(
+                        "<paréntesis> : (\n"
+                    );
+
+                    txtSalida.append(
+                        "<expresión> : "
+                        + condicion + "\n"
+                    );
+
+                    txtSalida.append(
+                        "<paréntesis> : )\n"
+                    );
+                }
+
+                txtSalida.append(
+                    "<break> : "
+                    + breakToken + "\n"
+                );
+            }
+
+            // =====================================
+            // MEOWL
+            // =====================================
+            else if (linea.contains("meowl")) {
+
+                txtSalida.append(
+                    "<comando salida> : meowl\n"
+                );
+
+                String expresion =
+                        linea.replace("meowl", "")
+                        .replace(";", "")
+                        .trim();
+
+                txtSalida.append(
+                    "<expresión> : "
+                    + expresion + "\n"
+                );
+
+                txtSalida.append(
+                    "<break> : "
+                    + breakToken + "\n"
+                );
+            }
+
+            // =====================================
+            // CIERRE DE BLOQUE
+            // =====================================
+            else if (linea.equals("}")) {
+
+                txtSalida.append(
+                    "<bloque> : cierre\n"
+                );
+
+                txtSalida.append(
+                    "<break> : }\n"
+                );
+            }
+
+            txtSalida.append(
+                "\n──────────────────────────────────────\n\n"
+            );
+        }
+    }
     
     /**
      * @param args the command line arguments
