@@ -5,6 +5,7 @@
 package com.mycompany.solosis;
 
 import java.awt.Color;
+import java.util.regex.Pattern;
 import java.awt.Font;
 import java.util.ArrayList;
 import java.util.List;
@@ -200,31 +201,41 @@ public class Vista extends javax.swing.JFrame {
  
         // Fase 2: Análisis Léxico + Gramática + Ejecución
         try {
+
+            txtSalida.setForeground(new Color(0, 255, 100));
+
             // =========================================
-            // ANALIZADOR LÉXICO
+            // ANÁLISIS LÉXICO
             // =========================================
-            AnalizadorManual lexer =
-                    new AnalizadorManual();
+            txtSalida.append(
+                "\n========== ANÁLISIS LÉXICO ==========\n\n"
+            );
+
+            AnalizadorManual lexer = new AnalizadorManual();
 
             List<AnalizadorManual.Token> tokens =
                     lexer.escanear(codigo);
 
             // =========================================
+            // GRAMÁTICA
+            // =========================================
+            mostrarGramaticaEnTerminal(codigo);
+
+            // =========================================
             // EJECUCIÓN
             // =========================================
-            Interprete ejecutor =
-                    new Interprete();
+            txtSalida.append(
+                "\n========== EJECUCIÓN ==========\n\n"
+            );
+
+            Interprete ejecutor = new Interprete();
 
             ejecutor.ejecutar(tokens);
 
             String resultadoLog =
                     ejecutor.obtenerLogEjecucion();
 
-            // =========================================
-            // COLOR SEGÚN RESULTADO
-            // =========================================
             if (resultadoLog.contains("ERRor")
-                    || resultadoLog.contains("ERROR")
                     || resultadoLog.contains("ABORTADA")) {
 
                 txtSalida.setForeground(Color.RED);
@@ -235,76 +246,24 @@ public class Vista extends javax.swing.JFrame {
                         new Color(0, 255, 100)
                 );
             }
-            // =========================================
-            // MOSTRAR GRAMÁTICA EN TERMINAL
-            // =========================================
-            txtSalida.setForeground(new Color(0, 255, 100));
-
-            mostrarGramaticaEnTerminal(codigo);
-
-            txtSalida.append(
-                "\n========== ANÁLISIS LÉXICO ==========\n\n"
-            );
-
-
-            // =========================================
-            // MOSTRAR EJECUCIÓN
-            // =========================================
-            txtSalida.append(
-                "\n========== EJECUCIÓN ==========\n\n"
-            );
 
             txtSalida.append(resultadoLog);
 
-            txtSalida.append(
-                "\n\n>>> FIN DEL PROGRAMA SOLOSIS <<<"
-            );
-            
-
-        }
-        // =========================================
-        // ERROR LÉXICO
-        // =========================================
-        catch (ExcepcionLexica e) {
+        } catch (ExcepcionLexica e) {
 
             txtSalida.setForeground(Color.RED);
 
-            txtSalida.append(
-                "\n❌ ERROR LÉXICO:\n"
+            txtSalida.setText(
+                    "Error Léxico: " + e.getMessage()
             );
 
-            txtSalida.append(
-                e.getMessage()
-            );
-        }
-        // =========================================
-        // ERROR DE LÍMITES
-        // =========================================
-        catch (ExcepcionLimite e) {
+        } catch (Exception e) {
 
             txtSalida.setForeground(Color.RED);
 
-            txtSalida.append(
-                "\n❌ ERROR DE LÍMITES:\n"
-            );
-
-            txtSalida.append(
-                e.getMessage()
-            );
-        }
-        // =========================================
-        // ERROR GENERAL
-        // =========================================
-        catch (Exception e) {
-
-            txtSalida.setForeground(Color.RED);
-
-            txtSalida.append(
-                "\n❌ ERROR CRÍTICO DEL SISTEMA:\n"
-            );
-
-            txtSalida.append(
-                e.getMessage()
+            txtSalida.setText(
+                    "ERROR CRÍTICO DE SISTEMA: "
+                    + e.getMessage()
             );
         }
     }//GEN-LAST:event_btnAnalizarActionPerformed
@@ -338,229 +297,409 @@ public class Vista extends javax.swing.JFrame {
     }
     
     private void mostrarGramaticaEnTerminal(String codigo) {
-        txtSalida.append(
-            "\n========== GRAMÁTICA SOLOSIS ==========\n\n"
-        );
-        
-        String[] lineas = codigo.split("\n");
 
-        for (int i = 0; i < lineas.length; i++) {
+    // =====================================================
+    // CORRECCIÓN:
+    // separa llaves pegadas
+    // ejemplo:
+    // }purple_lizard(...)
+    // =====================================================
+    codigo = codigo.replace("}", "}\n");
 
-            String linea = lineas[i].trim();
+    txtSalida.append(
+        "\n========== GRAMÁTICA SOLOSIS ==========\n\n"
+    );
 
-            if (linea.isEmpty()) {
-                continue;
-            }
+    String[] lineas = codigo.split("\n");
 
-            txtSalida.append(
-                "LÍNEA " + (i + 1) + "\n"
-            );
+    for (int i = 0; i < lineas.length; i++) {
 
-            // =====================================
-            // IDENTIFICAR BREAK
-            // =====================================
-            String breakToken = "-";
+        String linea = lineas[i].trim();
 
-            if (linea.endsWith(";")) {
-                breakToken = ";";
-            }
+        // =====================================================
+        // NORMALIZAR ESPACIOS
+        // =====================================================
+        linea = linea
+                .replace("?", " ? ")
+                .replace("(", " ( ")
+                .replace(")", " ) ")
+                .replace("{", " { ")
+                .replace("}", " } ")
+                .replace("+", " + ")
+                .replace("-", " - ")
+                .replace("*", " * ")
+                .replace("/", " / ")
+                .replace(">=", " >= ")
+                .replace("<=", " <= ")
+                .replace("==", " == ")
+                .replace("!=", " != ")
+                .replace(">", " > ")
+                .replace("<", " < ")
+                .replace(";", " ; ")
+                .replaceAll("\\s+", " ")
+                .trim();
 
-            if (linea.endsWith("{")) {
-                breakToken = "{";
-            }
-
-            if (linea.endsWith("}")) {
-                breakToken = "}";
-            }
-
-            // =====================================
-            // DECLARACIONES SOLOSIS
-            // x gabite ? 3;
-            // =====================================
-            if (linea.contains("?")
-                    && !linea.startsWith("spinda")) {
-
-                String limpia = linea
-                        .replace(";", "")
-                        .trim();
-
-                String[] partes =
-                        limpia.split("\\s+");
-
-                if (partes.length >= 4) {
-
-                    String identificador = partes[0];
-
-                    String tipoDato = partes[1];
-
-                    String expresion =
-                            limpia.substring(
-                                    limpia.indexOf("?") + 1
-                            ).trim();
-
-                    txtSalida.append(
-                        "<identificador> : "
-                        + identificador + "\n"
-                    );
-
-                    txtSalida.append(
-                        "<tipo de dato> : "
-                        + tipoDato + "\n"
-                    );
-
-                    txtSalida.append(
-                        "<asignación> : ?\n"
-                    );
-
-                    txtSalida.append(
-                        "<expresión> : "
-                        + expresion + "\n"
-                    );
-
-                    txtSalida.append(
-                        "<break> : "
-                        + breakToken + "\n"
-                    );
-                }
-            }
-
-            // =====================================
-            // SPINDA
-            // spinda(x>1){
-            // =====================================
-            else if (linea.startsWith("spinda")) {
-
-                txtSalida.append(
-                    "<bloque> : spinda\n"
-                );
-
-                if (linea.contains("(")
-                        && linea.contains(")")) {
-
-                    String condicion =
-                            linea.substring(
-                                    linea.indexOf("(") + 1,
-                                    linea.indexOf(")")
-                            );
-
-                    txtSalida.append(
-                        "<paréntesis> : (\n"
-                    );
-
-                    txtSalida.append(
-                        "<expresión> : "
-                        + condicion + "\n"
-                    );
-
-                    txtSalida.append(
-                        "<paréntesis> : )\n"
-                    );
-                }
-
-                txtSalida.append(
-                    "<break> : "
-                    + breakToken + "\n"
-                );
-            }
-
-            // =====================================
-            // LIZARD
-            // =====================================
-            else if (linea.startsWith("LIZARD")) {
-
-                txtSalida.append(
-                    "<bloque> : LIZARD\n"
-                );
-
-                txtSalida.append(
-                    "<break> : "
-                    + breakToken + "\n"
-                );
-            }
-
-            // =====================================
-            // PURPLE_LIZARD
-            // =====================================
-            else if (linea.startsWith("purple_lizard")) {
-
-                txtSalida.append(
-                    "<bloque> : purple_lizard\n"
-                );
-
-                if (linea.contains("(")
-                        && linea.contains(")")) {
-
-                    String condicion =
-                            linea.substring(
-                                    linea.indexOf("(") + 1,
-                                    linea.indexOf(")")
-                            );
-
-                    txtSalida.append(
-                        "<paréntesis> : (\n"
-                    );
-
-                    txtSalida.append(
-                        "<expresión> : "
-                        + condicion + "\n"
-                    );
-
-                    txtSalida.append(
-                        "<paréntesis> : )\n"
-                    );
-                }
-
-                txtSalida.append(
-                    "<break> : "
-                    + breakToken + "\n"
-                );
-            }
-
-            // =====================================
-            // MEOWL
-            // =====================================
-            else if (linea.contains("meowl")) {
-
-                txtSalida.append(
-                    "<comando salida> : meowl\n"
-                );
-
-                String expresion =
-                        linea.replace("meowl", "")
-                        .replace(";", "")
-                        .trim();
-
-                txtSalida.append(
-                    "<expresión> : "
-                    + expresion + "\n"
-                );
-
-                txtSalida.append(
-                    "<break> : "
-                    + breakToken + "\n"
-                );
-            }
-
-            // =====================================
-            // CIERRE DE BLOQUE
-            // =====================================
-            else if (linea.equals("}")) {
-
-                txtSalida.append(
-                    "<bloque> : cierre\n"
-                );
-
-                txtSalida.append(
-                    "<break> : }\n"
-                );
-            }
-
-            txtSalida.append(
-                "\n──────────────────────────────────────\n\n"
-            );
+        if (linea.isEmpty()) {
+            continue;
         }
+
+        String salida =
+                "LINEA " + (i + 1) + ".- ";
+
+        // =====================================================
+        // SPINDA
+        // =====================================================
+        if (linea.startsWith("spinda")) {
+
+            salida +=
+                    "<bloque> : spinda ";
+
+            String[] partes =
+                    linea.split("\\s+");
+
+            for (int j = 1; j < partes.length; j++) {
+
+                String actual = partes[j];
+
+                switch (actual) {
+
+                    case "(":
+                        salida +=
+                                "<paréntesis> : ( ";
+                        break;
+
+                    case ")":
+                        salida +=
+                                "<paréntesis> : ) ";
+                        break;
+
+                    case "{":
+                        salida +=
+                                "<break> : { ";
+                        break;
+
+                    case ">":
+                    case "<":
+                    case ">=":
+                    case "<=":
+                    case "==":
+                    case "!=":
+
+                        salida +=
+                                "<operador> : "
+                                + actual + " ";
+                        break;
+
+                    default:
+
+                        if (actual.matches("[0-9]+")) {
+
+                            salida +=
+                                    "<numero> : "
+                                    + actual + " ";
+
+                        } else if (actual.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+
+                            salida +=
+                                    "<identificador> : "
+                                    + actual + " ";
+                        }
+                }
+            }
+        }
+
+        // =====================================================
+        // DECLARACIÓN
+        // x gabite ? 3;
+        // =====================================================
+        else if (linea.contains("gabite")
+                || linea.contains("espeon")
+                || linea.contains("falink")) {
+
+            String limpia =
+                    linea.replace(";", "")
+                         .trim();
+
+            String[] partes =
+                    limpia.split("\\s+");
+
+            if (partes.length >= 4) {
+
+                salida +=
+                        "<expresión> : ";
+
+                salida +=
+                        "<identificador> : "
+                        + partes[0] + " ";
+
+                salida +=
+                        "<tipo de dato> : "
+                        + partes[1] + " ";
+
+                salida +=
+                        "<asignación> : ? ";
+
+                salida +=
+                        "<expresión> : ";
+
+                for (int j = 3; j < partes.length; j++) {
+
+                    String actual = partes[j];
+
+                    if (actual.equals("+")
+                            || actual.equals("-")
+                            || actual.equals("*")
+                            || actual.equals("/")) {
+
+                        salida +=
+                                "<operador> : "
+                                + actual + " ";
+
+                    } else if (actual.matches("[0-9]+")) {
+
+                        salida +=
+                                "<numero> : "
+                                + actual + " ";
+
+                    } else {
+
+                        salida +=
+                                "<identificador> : "
+                                + actual + " ";
+                    }
+                }
+
+                salida +=
+                        "<break> : ;";
+            }
+        }
+
+        // =====================================================
+        // OPERACIÓN
+        // contador ? contador + 1;
+        // =====================================================
+        else if (linea.contains("?")) {
+
+            String limpia =
+                    linea.replace(";", "")
+                         .trim();
+
+            String[] partes =
+                    limpia.split("\\s+");
+
+            if (partes.length >= 3) {
+
+                salida +=
+                        "<expresión> : ";
+
+                salida +=
+                        "<identificador> : "
+                        + partes[0] + " ";
+
+                salida +=
+                        "<asignación> : ? ";
+
+                salida +=
+                        "<expresión> : ";
+
+                for (int j = 2; j < partes.length; j++) {
+
+                    String actual = partes[j];
+
+                    if (actual.equals("+")
+                            || actual.equals("-")
+                            || actual.equals("*")
+                            || actual.equals("/")) {
+
+                        salida +=
+                                "<operador> : "
+                                + actual + " ";
+
+                    } else if (actual.matches("[0-9]+")) {
+
+                        salida +=
+                                "<numero> : "
+                                + actual + " ";
+
+                    } else {
+
+                        salida +=
+                                "<identificador> : "
+                                + actual + " ";
+                    }
+                }
+
+                salida +=
+                        "<break> : ;";
+            }
+        }
+
+        // =====================================================
+        // MEOWL
+        // =====================================================
+        else if (linea.contains("meowl")) {
+
+            salida +=
+                    "<comando salida> : meowl ";
+
+            String expresion =
+                    linea.replace("meowl", "")
+                         .replace(";", "")
+                         .trim();
+
+            String[] partes =
+                    expresion.split("\\s+");
+
+            salida +=
+                    "<expresión> : ";
+
+            for (String actual : partes) {
+
+                if (actual.equals("+")) {
+
+                    salida +=
+                            "<operador> : + ";
+
+                } else if (actual.matches("\".*\"")) {
+
+                    salida +=
+                            actual + " ";
+
+                } else {
+
+                    salida +=
+                            "<identificador> : "
+                            + actual + " ";
+                }
+            }
+
+            salida +=
+                    "<break> : ;";
+        }
+
+        // =====================================================
+        // LIZARD
+        // =====================================================
+        else if (linea.startsWith("LIZARD")) {
+
+            salida +=
+                    "<bloque> : LIZARD ";
+
+            if (linea.contains("{")) {
+
+                salida +=
+                        "<break> : {";
+            }
+        }
+
+        // =====================================================
+        // CIERRE BLOQUE
+        // =====================================================
+        else if (linea.equals("}")) {
+
+            salida +=
+                    "<bloque> : cierre ";
+
+            salida +=
+                    "<break> : }";
+        }
+
+        // =====================================================
+        // purple_lizard (5>=contador);
+        // =====================================================
+        else if (linea.contains("purple_lizard")) {
+
+            salida +=
+                    "<expresión> : ";
+
+            salida +=
+                    "<identificador> : purple_lizard ";
+
+            if (linea.contains("(")) {
+
+                salida +=
+                        "<paréntesis> : ( ";
+            }
+
+            String dentro =
+                    linea.substring(
+                            linea.indexOf("(") + 1,
+                            linea.indexOf(")")
+                    ).trim();
+
+            String operador = "";
+
+            if (dentro.contains(">=")) {
+                operador = ">=";
+            } else if (dentro.contains("<=")) {
+                operador = "<=";
+            } else if (dentro.contains("==")) {
+                operador = "==";
+            } else if (dentro.contains("!=")) {
+                operador = "!=";
+            } else if (dentro.contains(">")) {
+                operador = ">";
+            } else if (dentro.contains("<")) {
+                operador = "<";
+            }
+
+            String[] exp =
+                    dentro.split(
+                            Pattern.quote(operador)
+                    );
+
+            if (exp.length == 2) {
+
+                String izquierda =
+                        exp[0].trim();
+
+                String derecha =
+                        exp[1].trim();
+
+                if (izquierda.matches("[0-9]+")) {
+
+                    salida +=
+                            "<numero> : "
+                            + izquierda + " ";
+
+                } else {
+
+                    salida +=
+                            "<identificador> : "
+                            + izquierda + " ";
+                }
+
+                salida +=
+                        "<operador> : "
+                        + operador + " ";
+
+                if (derecha.matches("[0-9]+")) {
+
+                    salida +=
+                            "<numero> : "
+                            + derecha + " ";
+
+                } else {
+
+                    salida +=
+                            "<identificador> : "
+                            + derecha + " ";
+                }
+            }
+
+            salida +=
+                    "<paréntesis> : ) ";
+
+            salida +=
+                    "<break> : ;";
+        }
+
+        txtSalida.append(
+                salida + "\n\n"
+        );
     }
-    
+}
+
     /**
      * @param args the command line arguments
      */
@@ -595,7 +734,7 @@ public class Vista extends javax.swing.JFrame {
             }
         });
     }
-
+            
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAnalizar;
     private javax.swing.JButton btnTokens;

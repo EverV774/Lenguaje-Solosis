@@ -18,75 +18,205 @@ public class VentanaTokens extends javax.swing.JDialog {
  
     /** Convierte el nombre interno del patrón al patrón regex legible. */
     private static String resolverPatronLegible(String nombrePatron) {
-        switch (nombrePatron) {
-            case "PALABRA_RESERVADA_GABITE": return "gabite";
-            case "PALABRA_RESERVADA_ESPEON": return "espeon";
-            case "PALABRA_RESERVADA_FALINK": return "falink";
-            case "PALABRA_RESERVADA_MEOWL":  return "meowl";
-            case "LITERAL_ENTERO":           return "[0-9]+";
-            case "LITERAL_DECIMAL":          return "[0-9]+\\.[0-9]+";
-            case "LITERAL_STRING":           return "\"[^\"]*\"";
-            case "IDENTIFICADOR":            return "[a-zA-Z_][a-zA-Z0-9_]*";
-            case "ASIGNACION":               return "\\?";
-            case "OPERADOR_SUMA":            return "\\+";
-            case "OPERADOR_RESTA":           return "-";
-            case "OPERADOR_MULT":            return "\\*";
-            case "OPERADOR_DIV":             return "/";
-            case "PUNTO_COMA":               return ";";
-            case "COMENTARIO":               return "#.*";
-            default:                          return nombrePatron;
-        }
+
+    switch (nombrePatron) {
+
+        // =========================================
+        // PALABRAS RESERVADAS
+        // =========================================
+        case "PALABRA_RESERVADA_GABITE":
+            return "gabite";
+
+        case "PALABRA_RESERVADA_ESPEON":
+            return "espeon";
+
+        case "PALABRA_RESERVADA_FALINK":
+            return "falink";
+
+        case "PALABRA_RESERVADA_MEOWL":
+            return "meowl";
+
+        case "PALABRA_RESERVADA_SPINDA":
+            return "spinda";
+
+        case "PALABRA_RESERVADA_LIZARD":
+            return "LIZARD";
+
+        case "PALABRA_RESERVADA_PURPLE_LIZARD":
+            return "purple_lizard";
+
+        // =========================================
+        // LITERALES
+        // =========================================
+        case "LITERAL_ENTERO":
+            return "[0-9]{1,10}";
+
+        case "LITERAL_DECIMAL":
+            return "[0-9]{1,10}\\.[0-9]+";
+
+        case "LITERAL_STRING":
+            return "\"[^\"]*\"";
+
+        case "IDENTIFICADOR":
+            return "[a-zA-Z_][a-zA-Z0-9_]*";
+
+        // =========================================
+// SÍMBOLOS
+// =========================================
+case "ASIGNACION":
+case "?":
+    return "\\?";
+
+case "OPERADOR_SUMA":
+case "+":
+    return "\\+";
+
+case "OPERADOR_RESTA":
+case "-":
+    return "\\-";
+
+case "OPERADOR_MULT":
+case "*":
+    return "\\*";
+
+case "OPERADOR_DIV":
+case "/":
+    return "\\/";
+
+case "PARENTESIS_IZQ":
+case "(":
+    return "\\(";
+
+case "PARENTESIS_DER":
+case ")":
+    return "\\)";
+
+case "LLAVE_IZQ":
+case "{":
+    return "\\{";
+
+case "LLAVE_DER":
+case "}":
+    return "\\}";
+
+case "PUNTO_COMA":
+case ";":
+    return "\\;";
+
+case "MAYOR":
+case ">":
+    return "\\>";
+
+case "MENOR":
+case "<":
+    return "\\<";
+
+case "MAYOR_IGUAL":
+case ">=":
+    return "\\>\\=";
+
+case "MENOR_IGUAL":
+case "<=":
+    return "\\<\\=";
+
+case "IGUAL_IGUAL":
+case "==":
+    return "\\=\\=";
+
+case "DIFERENTE":
+case "!=":
+    return "\\!\\=";
+        default:
+            return nombrePatron;
     }
+}
  
     /** Llena la tabla con los datos de los tokens incluyendo lexema y patrón. */
-    public void llenarTabla(java.util.List<Object[]> datos) {
+public void llenarTabla(java.util.List<Object[]> datos) {
 
-        javax.swing.table.DefaultTableModel modelo =
-                (javax.swing.table.DefaultTableModel) tblTokens.getModel();
-        modelo.setRowCount(0);
+    javax.swing.table.DefaultTableModel modelo =
+            (javax.swing.table.DefaultTableModel) tblTokens.getModel();
 
-        java.util.Set<String> reservadas =
-                new java.util.HashSet<>(java.util.Arrays.asList(
-            "gabite",
-            "espeon",
-            "falink",
-            "meowl",
-            "spinda",
-            "LIZARD",
-            "purple_lizard"
+    modelo.setRowCount(0);
 
-        ));
+    java.util.Set<String> reservadas =
+            new java.util.HashSet<>(java.util.Arrays.asList(
+                    "gabite",
+                    "espeon",
+                    "falink",
+                    "meowl",
+                    "spinda",
+                    "lizard",
+                    "purple_lizard"
+            ));
 
-        int contador = 1;
-        
-        for (Object[] fila : datos) {
-            String tipo =
-                    fila[0] != null ? fila[0].toString() : "";
-            String lexema =
-                    fila[1] != null ? fila[1].toString() : "";
-            String patron =
-                    fila[2] != null ? fila[2].toString() : "";
-            Object linea = fila[3];
-            Object columna = fila[4];
-            String patronLegible =
-                    resolverPatronLegible(patron);
-            String esReservada =
-                    reservadas.contains(lexema)
-                    ? "Sí"
-                    : "No";
+    int contador = 1;
 
-            modelo.addRow(new Object[] {
-                contador,
-                tipo,
-                lexema,
-                patronLegible,
-                linea,
-                columna,
-                esReservada
-            });
-            contador++;
-        }
+    for (Object[] fila : datos) {
+
+        // =========================================
+        // TOKEN
+        // =========================================
+        String tipo =
+                fila[0] != null
+                        ? fila[0].toString()
+                        : "";
+
+        // =========================================
+        // LEXEMA
+        // =========================================
+        String lexema =
+                fila[1] != null
+                        ? fila[1].toString()
+                        : "";
+
+        // =========================================
+        // PATRÓN
+        // =========================================
+        String patron =
+                fila[2] != null
+                        ? fila[2].toString()
+                        : "";
+
+        // =========================================
+        // LÍNEA Y COLUMNA
+        // =========================================
+        Object linea   = fila[3];
+        Object columna = fila[4];
+
+        // =========================================
+        // PATRÓN LEGIBLE
+        // =========================================
+        String patronLegible =
+                resolverPatronLegible(patron);
+
+        // =========================================
+        // PALABRA RESERVADA
+        // =========================================
+        String reservada =
+                reservadas.contains(
+                        lexema.toLowerCase()
+                )
+                ? "Sí"
+                : "No";
+
+        // =========================================
+        // AGREGAR FILA
+        // =========================================
+        modelo.addRow(new Object[]{
+
+            contador,
+            lexema,
+            lexema,
+            patronLegible,
+            linea,
+            columna,
+            reservada
+        });
+
+        contador++;
     }
+}
 
  
     /**
@@ -112,7 +242,7 @@ public class VentanaTokens extends javax.swing.JDialog {
                 {null, null, null, null, null, null, null}
             },
             new String [] {
-                "No. Lista", "Tipo", "Valor", "Patrón", "Linea", "Columna", "Palabra reservada"
+                "No. Lista", "Token", "Lexema", "Patrón", "Linea", "Columna", "Palabra reservada"
             }
         ) {
             boolean[] canEdit = new boolean [] {
